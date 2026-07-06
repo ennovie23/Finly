@@ -59,7 +59,7 @@ app.get('/api/test-db', async (req, res) => {
 });
 
 app.get('/', (req, res) => {
-  res.send("Finly backend engine is breathing smoothly!");
+  res.send("SpendSight backend engine is breathing smoothly!");
 });
 
 const PORT = 5001;
