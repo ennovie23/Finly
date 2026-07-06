@@ -1,24 +1,68 @@
-const express = require('express'); // 1. Imports the web framework to create our API routes.
-const cors = require('cors');       // 2. Imports Cross-Origin Resource Sharing security rules.
-require('dotenv').config();         // 3. Allows the app to read secret passwords from a hidden file.
+const express = require('express');
+const cors = require('cors');
+const { Pool } = require('pg');
+require('dotenv').config({ path: '../.env' });
 
-const app = express();              // 4. Instantiates your server engine application.
-const PORT = 5001; // 5. Assigns a network communication port (Local: 5000).
+const app = express();
 
-// Middleware (Code that processes data *before* it reaches your endpoints)
-app.use(cors());          // 6. Security bridge: Permits your future React app to talk to this server.
-app.use(express.json());  // 7. Parser: Teaches the server to read incoming JSON object payloads.
+// Middleware
+app.use(cors());
+app.use(express.json()); // Parses incoming JSON request bodies
 
-// Main entry verification route (An Endpoint)
-app.get('/', (req, res) => {
-  // 8. Listen for a browser request ('/') and send back a confirmation text message response.
-  res.send('Finly backend engine is breathing smoothly!');
+// 🖥️ Initialize the PostgreSQL Connection Pool
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: false, // 🛠️ Set this to false to resolve the SSL handshake error
 });
 
-// 9. Start the network listener loop
+// 📥 1. POST ROUTE: Save a new expense to the database
+app.post('/api/expenses', async (req, res) => {
+  try {
+    const { amount, category, description } = req.body;
+    
+    const queryText = `
+      INSERT INTO expenses (amount, category, description) 
+      VALUES ($1, $2, $3) 
+      RETURNING *;
+    `;
+    
+    const values = [amount, category, description];
+    const result = await pool.query(queryText, values);
+    
+    res.status(201).json(result.rows[0]); // Returns the saved row back to the client
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error while saving expense.');
+  }
+});
+
+// 📤 2. GET ROUTE: Fetch all logged expenses from the database
+app.get('/api/expenses', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM expenses ORDER BY date DESC;');
+    res.json(result.rows); // Returns the array of expenses as JSON
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error while fetching expenses.');
+  }
+});
+
+// Test Endpoint
+app.get('/api/test-db', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT NOW();');
+    res.json({ status: 'Connected to PostgreSQL!', timestamp: result.rows[0].now });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Database connection error');
+  }
+});
+
+app.get('/', (req, res) => {
+  res.send("Finly backend engine is breathing smoothly!");
+});
+
+const PORT = 5001;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
-  
-  // Keeps the process alive in agent-wrapped IDE terminals
-  setInterval(() => {}, 1000 << 30);
 });
