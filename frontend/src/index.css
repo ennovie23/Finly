@@ -1,4 +1,20 @@
 :root {
+  /* Dark mode variables (default) */
+  --bg-app: #080B11;
+  --bg-sidebar: #090D16;
+  --bg-card: #111625;
+  --bg-card-inner: #080B11;
+  --border-color: #1b2135;
+  --text-primary: #FFFFFF;
+  --text-secondary: #A0AEC0;
+  --input-bg: #080B11;
+  --card-hover: rgba(0, 216, 246, 0.08);
+  --modal-overlay: rgba(5, 7, 12, 0.6);
+  --table-border: #1b2135;
+  --table-row-hover: #1c2333;
+  --theme-toggle-bg: #111625;
+  --theme-toggle-border: #1b2135;
+
   --text: #6b6375;
   --text-h: #08060d;
   --bg: #fff;
@@ -10,7 +26,7 @@
   --social-bg: rgba(244, 243, 236, 0.5);
   --shadow:
     rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
-  --border-color: #1b2135;
+  --border-color-old: #1b2135;
 
   --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
   --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
@@ -107,4 +123,22 @@ code {
   line-height: 135%;
   padding: 4px 8px;
   background: var(--code-bg);
+}
+
+/* Light mode override */
+[data-theme='light'] {
+  --bg-app: #f1f5f9;
+  --bg-sidebar: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-inner: #f8fafc;
+  --border-color: #cbd5e1;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --input-bg: #f8fafc;
+  --card-hover: rgba(0, 216, 246, 0.08);
+  --modal-overlay: rgba(15, 23, 42, 0.35);
+  --table-border: #e2e8f0;
+  --table-row-hover: #f1f5f9;
+  --theme-toggle-bg: #e2e8f0;
+  --theme-toggle-border: #cbd5e1;
 }

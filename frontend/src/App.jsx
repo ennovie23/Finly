@@ -20,6 +20,12 @@ function App() {
   const [userId, setUserId] = useState(
     () => localStorage.getItem("spendsight_userId") || ""
   );
+  const [name, setName] = useState(
+    () => localStorage.getItem("spendsight_name") || ""
+  );
+  const [picture, setPicture] = useState(
+    () => localStorage.getItem("spendsight_picture") || ""
+  );
   const [loginError, setLoginError] = useState("");
 
   const login = useGoogleLogin({
@@ -42,10 +48,14 @@ function App() {
           setIsLoggedIn(true);
           setHasPassword(data.user.hasPassword);
           setUserId(data.user.id);
+          setName(data.user.name);
+          setPicture(data.user.picture);
           localStorage.setItem("spendsight_email", data.user.email);
           localStorage.setItem("spendsight_isLoggedIn", "true");
           localStorage.setItem("spendsight_hasPassword", String(data.user.hasPassword));
           localStorage.setItem("spendsight_userId", String(data.user.id));
+          localStorage.setItem("spendsight_name", data.user.name || "");
+          localStorage.setItem("spendsight_picture", data.user.picture || "");
         } else {
           console.error("Google login failed on backend:", data.error);
           setLoginError(data.error || "Google login failed.");
@@ -79,10 +89,14 @@ function App() {
         setIsLoggedIn(true);
         setHasPassword(data.user.hasPassword);
         setUserId(data.user.id);
+        setName(data.user.name);
+        setPicture(data.user.picture);
         localStorage.setItem("spendsight_email", data.user.email);
         localStorage.setItem("spendsight_isLoggedIn", "true");
         localStorage.setItem("spendsight_hasPassword", String(data.user.hasPassword));
         localStorage.setItem("spendsight_userId", String(data.user.id));
+        localStorage.setItem("spendsight_name", data.user.name || "");
+        localStorage.setItem("spendsight_picture", data.user.picture || "");
       } else {
         setLoginError(data.error || "Login failed.");
       }
@@ -98,10 +112,15 @@ function App() {
     setEmail("");
     setHasPassword(false);
     setUserId("");
+    setName("");
+    setPicture("");
     localStorage.removeItem("spendsight_email");
     localStorage.removeItem("spendsight_isLoggedIn");
     localStorage.removeItem("spendsight_hasPassword");
     localStorage.removeItem("spendsight_userId");
+    localStorage.removeItem("spendsight_name");
+    localStorage.removeItem("spendsight_picture");
+    localStorage.removeItem("spendsight_activeTab");
   };
 
   const handlePasswordSet = () => {
@@ -109,14 +128,33 @@ function App() {
     localStorage.setItem("spendsight_hasPassword", "true");
   };
 
+  const [theme, setTheme] = useState(
+    () => localStorage.getItem("spendsight_theme") || "dark"
+  );
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("spendsight_theme", theme);
+  }, [theme]);
+
   useEffect(() => {
     if (isLoggedIn && email) {
       fetch(`http://localhost:5001/api/auth/status?email=${encodeURIComponent(email)}`)
         .then((res) => res.json())
         .then((data) => {
-          if (data && data.hasPassword !== undefined) {
-            setHasPassword(data.hasPassword);
-            localStorage.setItem("spendsight_hasPassword", String(data.hasPassword));
+          if (data) {
+            if (data.hasPassword !== undefined) {
+              setHasPassword(data.hasPassword);
+              localStorage.setItem("spendsight_hasPassword", String(data.hasPassword));
+            }
+            if (data.name) {
+              setName(data.name);
+              localStorage.setItem("spendsight_name", data.name);
+            }
+            if (data.picture) {
+              setPicture(data.picture);
+              localStorage.setItem("spendsight_picture", data.picture);
+            }
           }
         })
         .catch((err) => console.error("Error fetching user status:", err));
@@ -124,7 +162,7 @@ function App() {
   }, [isLoggedIn, email]);
 
   if (isLoggedIn) {
-    return <Dashboard email={email} onLogout={handleLogout} hasPassword={hasPassword} onPasswordSet={handlePasswordSet} userId={userId} />;
+    return <Dashboard email={email} onLogout={handleLogout} hasPassword={hasPassword} onPasswordSet={handlePasswordSet} userId={userId} name={name} picture={picture} theme={theme} setTheme={setTheme} />;
   }
 
   return (

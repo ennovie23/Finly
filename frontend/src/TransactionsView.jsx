@@ -10,6 +10,13 @@ function TransactionsView({ email, user_id }) {
   const [selectedMonth, setSelectedMonth] = useState("All");
   const [sortDirection, setSortDirection] = useState("desc");
 
+  // Page limit size state
+  const [pageSize, setPageSize] = useState(10);
+
+  // Custom Category states
+  const [categoriesList, setCategoriesList] = useState(["Food", "Transport", "Utilities", "Entertainment"]);
+  const [customCategory, setCustomCategory] = useState("");
+
   // Edit states
   const [editingId, setEditingId] = useState(null);
 
@@ -28,6 +35,31 @@ function TransactionsView({ email, user_id }) {
     return parsedDate.toLocaleDateString("en-US", options);
   };
 
+  // Helper to fetch current date in YYYY-MM-DD format
+  const getTodayDateString = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  // Helper to trim whitespaces and capitalize the first letter
+  const cleanAndFormatCategory = (str) => {
+    if (!str) return "";
+    const cleaned = str.trim().replace(/\s+/g, ' ');
+    if (!cleaned) return "";
+    return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+  };
+
+  // Update dynamic dropdown options list based on active transactions
+  const syncCategories = (data) => {
+    const defaultCats = ["Food", "Transport", "Utilities", "Entertainment"];
+    const uniqueCats = Array.from(new Set(data.map((tx) => cleanAndFormatCategory(tx.category))));
+    const combined = Array.from(new Set([...defaultCats, ...uniqueCats]));
+    setCategoriesList(combined);
+  };
+
   // Load all active expenses
   const fetchExpenses = async () => {
     if (!user_id) return;
@@ -41,6 +73,7 @@ function TransactionsView({ email, user_id }) {
           amount: parseFloat(tx.amount),
         }));
         setTransactions(formattedData);
+        syncCategories(data);
       }
     } catch (err) {
       console.error("Failed to fetch expenses:", err);
@@ -68,7 +101,6 @@ function TransactionsView({ email, user_id }) {
 
   // Sync data fetch on mount or state toggling
   useEffect(() => {
-    // If we start editing but toggle the trash view, clear editing state
     setEditingId(null);
     clearForm();
 
@@ -91,9 +123,10 @@ function TransactionsView({ email, user_id }) {
     setDescription("");
     setDate("2026-07-07");
     setCategory("Food");
+    setCustomCategory("");
   };
 
-  // Form submit handler (supports both creating new and updating existing)
+  // Form submit handler
   const handleAddExpense = async (e) => {
     e.preventDefault();
     try {
@@ -113,13 +146,22 @@ function TransactionsView({ email, user_id }) {
         alert("Please select a category");
         return;
       }
+      if (category === "Other" && !customCategory.trim()) {
+        alert("Please specify custom category name");
+        return;
+      }
       if (!date) {
         alert("Please select a date");
         return;
       }
+      if (date > getTodayDateString()) {
+        alert("You cannot log expenses for future dates.");
+        return;
+      }
+
+      const finalCategory = category === "Other" ? cleanAndFormatCategory(customCategory) : category;
 
       if (editingId) {
-        // SCENARIO A: Edit and Update Expense
         const response = await fetch(`http://localhost:5001/api/expenses/${editingId}`, {
           method: "PUT",
           headers: {
@@ -127,8 +169,8 @@ function TransactionsView({ email, user_id }) {
           },
           body: JSON.stringify({
             amount: parseFloat(amount),
-            category,
-            description: description || category,
+            category: finalCategory,
+            description: description || finalCategory,
             date,
           }),
         });
@@ -141,13 +183,17 @@ function TransactionsView({ email, user_id }) {
             amount: parseFloat(data.amount),
           };
           setTransactions(transactions.map((t) => (t.id === editingId ? updatedTx : t)));
+          
+          if (!categoriesList.includes(finalCategory)) {
+            setCategoriesList([...categoriesList, finalCategory]);
+          }
+          
           setEditingId(null);
           clearForm();
         } else {
           alert("Failed to update expense in the database.");
         }
       } else {
-        // SCENARIO B: Create new Expense
         const response = await fetch("http://localhost:5001/api/expenses", {
           method: "POST",
           headers: {
@@ -155,8 +201,8 @@ function TransactionsView({ email, user_id }) {
           },
           body: JSON.stringify({
             amount: parseFloat(amount),
-            category,
-            description: description || category,
+            category: finalCategory,
+            description: description || finalCategory,
             date,
             user_id,
           }),
@@ -172,6 +218,11 @@ function TransactionsView({ email, user_id }) {
           if (!viewTrash) {
             setTransactions([newTx, ...transactions]);
           }
+
+          if (!categoriesList.includes(finalCategory)) {
+            setCategoriesList([...categoriesList, finalCategory]);
+          }
+
           clearForm();
         } else {
           alert("Failed to save expense in the database.");
@@ -191,11 +242,16 @@ function TransactionsView({ email, user_id }) {
     const day = String(dateObj.getDate()).padStart(2, "0");
     const formattedDateForInput = `${year}-${month}-${day}`;
 
+    if (!categoriesList.includes(tx.category)) {
+      setCategoriesList([...categoriesList, tx.category]);
+    }
+
     setEditingId(tx.id);
     setAmount(tx.amount.toString());
     setCategory(tx.category);
     setDescription(tx.description === tx.category ? "" : tx.description);
     setDate(formattedDateForInput);
+    setCustomCategory("");
   };
 
   // Soft delete active expense handler
@@ -307,7 +363,15 @@ function TransactionsView({ email, user_id }) {
       case "Entertainment":
         return { color: "#00E676", bg: "rgba(0, 230, 118, 0.1)", dot: "#00E676" };
       default:
-        return { color: "#A0AEC0", bg: "rgba(160, 174, 192, 0.1)", dot: "#A0AEC0" };
+        // Generate a unique color based on the category name character hash
+        let hash = 0;
+        for (let i = 0; i < cat.length; i++) {
+          hash = cat.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        const hue = Math.abs(hash % 360);
+        const color = `hsl(${hue}, 85%, 60%)`;
+        const bg = `hsla(${hue}, 85%, 60%, 0.12)`;
+        return { color, bg, dot: color };
     }
   };
 
@@ -323,33 +387,102 @@ function TransactionsView({ email, user_id }) {
       return sortDirection === "asc" ? dateA - dateB : dateB - dateA;
     });
 
+  // Paginate transactions based on pageSize
+  const displayedTransactions = filteredAndSortedTransactions.slice(0, pageSize);
+
   return (
-    <div style={{ color: "#F3F4F6", fontFamily: "system-ui, -apple-system, sans-serif" }}>
+    <div style={{ color: "var(--text-primary)", fontFamily: "system-ui, -apple-system, sans-serif" }}>
       {/* Header */}
-      <div style={{ marginBottom: "36px", textAlign: "left" }}>
-        <h1 style={{ fontSize: "32px", fontWeight: "700", color: "#FFF", margin: "0 0 6px 0" }}>
-          {viewTrash ? "Trash Bin" : "Log Expenses"}
-        </h1>
-        <p style={{ color: "#718096", fontSize: "16px", margin: 0 }}>
-          {viewTrash ? "Recover or permanently delete trashed items." : "Track your daily spending."}
-        </p>
+      <div style={{ marginBottom: "36px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ textAlign: "left" }}>
+          <h1 style={{ fontSize: "32px", fontWeight: "700", color: "var(--text-primary)", margin: "0 0 6px 0" }}>
+            {viewTrash ? "Trash Bin" : "Log Expenses"}
+          </h1>
+          <p style={{ color: "var(--text-secondary)", fontSize: "16px", margin: 0 }}>
+            {viewTrash ? "Recover or permanently delete trashed items." : "Track your daily spending."}
+          </p>
+        </div>
+
+        {/* Page Level Trash & Clear Buttons */}
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          {viewTrash && transactions.length > 0 && (
+            <button
+              onClick={handleClearTrashClick}
+              style={{
+                backgroundColor: "rgba(255, 82, 82, 0.1)",
+                border: "1px solid rgba(255, 82, 82, 0.2)",
+                color: "#FF5252",
+                padding: "10px 18px",
+                borderRadius: "10px",
+                fontSize: "14px",
+                fontWeight: "600",
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "rgba(255, 82, 82, 0.2)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "rgba(255, 82, 82, 0.1)";
+              }}
+            >
+              Empty Trash
+            </button>
+          )}
+
+          <button
+            onClick={() => setViewTrash(!viewTrash)}
+            style={{
+              backgroundColor: viewTrash ? "rgba(0, 216, 246, 0.1)" : "rgba(113, 128, 150, 0.1)",
+              border: `1px solid ${viewTrash ? "rgba(0, 216, 246, 0.2)" : "rgba(113, 128, 150, 0.2)"}`,
+              color: viewTrash ? "#00d8f6" : "var(--text-secondary)",
+              padding: "10px 18px",
+              borderRadius: "10px",
+              fontSize: "14px",
+              fontWeight: "600",
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+              transition: "all 0.2s ease",
+            }}
+          >
+            {viewTrash ? (
+              <>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="19" y1="12" x2="5" y2="12" />
+                  <polyline points="12 19 5 12 12 5" />
+                </svg>
+                Back to Log
+              </>
+            ) : (
+              <>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="3 6 5 6 21 6" />
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                </svg>
+                Trash Bin
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Two Column Grid */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "32px", alignItems: "start" }}>
         
         {/* Left Column: New Transaction Form */}
-        <div style={{ backgroundColor: "#111625", border: "1px solid #1b2135", borderRadius: "16px", padding: "28px", textAlign: "left", opacity: viewTrash ? 0.5 : 1, pointerEvents: viewTrash ? "none" : "auto" }}>
-          <h2 style={{ fontSize: "18px", fontWeight: "700", color: "#FFF", margin: "0 0 24px 0" }}>
+        <div style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: "16px", padding: "28px", textAlign: "left", opacity: viewTrash ? 0.5 : 1, pointerEvents: viewTrash ? "none" : "auto" }}>
+          <h2 style={{ fontSize: "18px", fontWeight: "700", color: "var(--text-primary)", margin: "0 0 24px 0" }}>
             {editingId ? "Edit Transaction" : "New Transaction"}
           </h2>
 
           <form onSubmit={handleAddExpense} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
             {/* Amount input */}
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-              <label style={{ color: "#A0AEC0", fontSize: "14px", fontWeight: "500" }}>Amount (₱)</label>
+              <label style={{ color: "var(--text-secondary)", fontSize: "14px", fontWeight: "500" }}>Amount (₱)</label>
               <div style={{ position: "relative" }}>
-                <span style={{ position: "absolute", left: "16px", top: "12px", color: "#718096", fontSize: "15px" }}>₱</span>
+                <span style={{ position: "absolute", left: "16px", top: "12px", color: "var(--text-secondary)", fontSize: "15px" }}>₱</span>
                 <input
                   type="number"
                   step="0.01"
@@ -359,11 +492,11 @@ function TransactionsView({ email, user_id }) {
                   disabled={viewTrash}
                   style={{
                     width: "100%",
-                    backgroundColor: "#080B11",
-                    border: "1px solid #1b2135",
+                    backgroundColor: "var(--bg-card-inner)",
+                    border: "1px solid var(--border-color)",
                     borderRadius: "8px",
                     padding: "12px 16px 12px 32px",
-                    color: "#FFF",
+                    color: "var(--text-primary)",
                     fontSize: "15px",
                     outline: "none",
                     boxSizing: "border-box",
@@ -374,34 +507,66 @@ function TransactionsView({ email, user_id }) {
 
             {/* Category selection */}
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-              <label style={{ color: "#A0AEC0", fontSize: "14px", fontWeight: "500" }}>Category</label>
+              <label style={{ color: "var(--text-secondary)", fontSize: "14px", fontWeight: "500" }}>Category</label>
               <select
                 value={category}
-                onChange={(e) => setCategory(e.target.value)}
+                onChange={(e) => {
+                  setCategory(e.target.value);
+                  if (e.target.value !== "Other") {
+                    setCustomCategory("");
+                  }
+                }}
                 disabled={viewTrash}
                 style={{
                   width: "100%",
-                  backgroundColor: "#080B11",
-                  border: "1px solid #1b2135",
+                  backgroundColor: "var(--bg-card-inner)",
+                  border: "1px solid var(--border-color)",
                   borderRadius: "8px",
                   padding: "12px 16px",
-                  color: "#FFF",
+                  color: "var(--text-primary)",
                   fontSize: "15px",
                   outline: "none",
                   boxSizing: "border-box",
                   cursor: "pointer",
                 }}
               >
-                <option value="Food">Food</option>
-                <option value="Transport">Transport</option>
-                <option value="Utilities">Utilities</option>
-                <option value="Entertainment">Entertainment</option>
+                {categoriesList.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+                <option value="Other">Other (Custom)</option>
               </select>
             </div>
 
+            {/* Custom Category name input (Only if Category === "Other") */}
+            {category === "Other" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <label style={{ color: "var(--text-secondary)", fontSize: "14px", fontWeight: "500" }}>Custom Category Name</label>
+                <input
+                  type="text"
+                  placeholder="e.g., Shopping, Subscriptions"
+                  value={customCategory}
+                  onChange={(e) => setCustomCategory(e.target.value)}
+                  disabled={viewTrash}
+                  style={{
+                    width: "100%",
+                    backgroundColor: "var(--bg-card-inner)",
+                    border: "1px solid var(--border-color)",
+                    borderRadius: "8px",
+                    padding: "12px 16px",
+                    color: "var(--text-primary)",
+                    fontSize: "15px",
+                    outline: "none",
+                    boxSizing: "border-box",
+                  }}
+                />
+              </div>
+            )}
+
             {/* Description input */}
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-              <label style={{ color: "#A0AEC0", fontSize: "14px", fontWeight: "500" }}>Add a short note (Optional)</label>
+              <label style={{ color: "var(--text-secondary)", fontSize: "14px", fontWeight: "500" }}>Add a short note (Optional)</label>
               <input
                 type="text"
                 value={description}
@@ -409,11 +574,11 @@ function TransactionsView({ email, user_id }) {
                 disabled={viewTrash}
                 style={{
                   width: "100%",
-                  backgroundColor: "#080B11",
-                  border: "1px solid #1b2135",
+                  backgroundColor: "var(--bg-card-inner)",
+                  border: "1px solid var(--border-color)",
                   borderRadius: "8px",
                   padding: "12px 16px",
-                  color: "#FFF",
+                  color: "var(--text-primary)",
                   fontSize: "15px",
                   outline: "none",
                   boxSizing: "border-box",
@@ -423,19 +588,20 @@ function TransactionsView({ email, user_id }) {
 
             {/* Date selection */}
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-              <label style={{ color: "#A0AEC0", fontSize: "14px", fontWeight: "500" }}>Date</label>
+              <label style={{ color: "var(--text-secondary)", fontSize: "14px", fontWeight: "500" }}>Date</label>
               <input
                 type="date"
                 value={date}
+                max={getTodayDateString()}
                 onChange={(e) => setDate(e.target.value)}
                 disabled={viewTrash}
                 style={{
                   width: "100%",
-                  backgroundColor: "#080B11",
-                  border: "1px solid #1b2135",
+                  backgroundColor: "var(--bg-card-inner)",
+                  border: "1px solid var(--border-color)",
                   borderRadius: "8px",
                   padding: "12px 16px",
-                  color: "#FFF",
+                  color: "var(--text-primary)",
                   fontSize: "15px",
                   outline: "none",
                   boxSizing: "border-box",
@@ -481,8 +647,8 @@ function TransactionsView({ email, user_id }) {
                   style={{
                     width: "100%",
                     backgroundColor: "transparent",
-                    border: "1px solid #1b2135",
-                    color: "#A0AEC0",
+                    border: "1px solid var(--border-color)",
+                    color: "var(--text-secondary)",
                     borderRadius: "8px",
                     padding: "12px",
                     fontSize: "14px",
@@ -491,12 +657,12 @@ function TransactionsView({ email, user_id }) {
                     transition: "all 0.2s ease",
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = "#718096";
-                    e.currentTarget.style.color = "#FFF";
+                    e.currentTarget.style.borderColor = "var(--text-secondary)";
+                    e.currentTarget.style.color = "var(--text-primary)";
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = "#1b2135";
-                    e.currentTarget.style.color = "#A0AEC0";
+                    e.currentTarget.style.borderColor = "var(--border-color)";
+                    e.currentTarget.style.color = "var(--text-secondary)";
                   }}
                 >
                   Cancel Edit
@@ -507,84 +673,44 @@ function TransactionsView({ email, user_id }) {
         </div>
 
         {/* Right Column: Recent Transactions Table */}
-        <div style={{ backgroundColor: "#111625", border: "1px solid #1b2135", borderRadius: "16px", padding: "28px", textAlign: "left" }}>
+        <div style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: "16px", padding: "28px", textAlign: "left" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
-            <h2 style={{ fontSize: "18px", fontWeight: "700", color: "#FFF", margin: 0 }}>
+            <h2 style={{ fontSize: "18px", fontWeight: "700", color: "var(--text-primary)", margin: 0 }}>
               {viewTrash ? "Deleted Transactions" : "Recent Transactions"}
             </h2>
             
             {/* Filter controls */}
-            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              {viewTrash && transactions.length > 0 && (
-                <button
-                  onClick={handleClearTrashClick}
-                  style={{
-                    backgroundColor: "rgba(255, 82, 82, 0.1)",
-                    border: "1px solid rgba(255, 82, 82, 0.2)",
-                    color: "#FF5252",
-                    padding: "6px 12px",
-                    borderRadius: "8px",
-                    fontSize: "13px",
-                    fontWeight: "600",
-                    cursor: "pointer",
-                    transition: "all 0.2s ease",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = "rgba(255, 82, 82, 0.2)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = "rgba(255, 82, 82, 0.1)";
-                  }}
-                >
-                  Empty Trash
-                </button>
-              )}
-
-              <button
-                onClick={() => setViewTrash(!viewTrash)}
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              {/* Page size limit selector */}
+              <select
+                value={pageSize}
+                onChange={(e) => setPageSize(Number(e.target.value))}
                 style={{
-                  backgroundColor: viewTrash ? "rgba(0, 216, 246, 0.1)" : "rgba(113, 128, 150, 0.1)",
-                  border: `1px solid ${viewTrash ? "rgba(0, 216, 246, 0.2)" : "rgba(113, 128, 150, 0.2)"}`,
-                  color: viewTrash ? "#00d8f6" : "#A0AEC0",
-                  padding: "6px 12px",
+                  backgroundColor: "var(--bg-card-inner)",
+                  border: "1px solid var(--border-color)",
                   borderRadius: "8px",
+                  padding: "6px 10px",
+                  color: "var(--text-secondary)",
                   fontSize: "13px",
-                  fontWeight: "600",
+                  outline: "none",
                   cursor: "pointer",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  transition: "all 0.2s ease",
                 }}
               >
-                {viewTrash ? (
-                  <>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="19" y1="12" x2="5" y2="12" />
-                      <polyline points="12 19 5 12 12 5" />
-                    </svg>
-                    Back to Log
-                  </>
-                ) : (
-                  <>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="3 6 5 6 21 6" />
-                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                    </svg>
-                    Trash Bin
-                  </>
-                )}
-              </button>
+                <option value={10}>Show 10</option>
+                <option value={25}>Show 25</option>
+                <option value={50}>Show 50</option>
+              </select>
 
+              {/* Month selector dropdown */}
               <select
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
                 style={{
-                  backgroundColor: "#080B11",
-                  border: "1px solid #1b2135",
+                  backgroundColor: "var(--bg-card-inner)",
+                  border: "1px solid var(--border-color)",
                   borderRadius: "8px",
-                  padding: "6px 12px",
-                  color: "#A0AEC0",
+                  padding: "6px 10px",
+                  color: "var(--text-secondary)",
                   fontSize: "13px",
                   outline: "none",
                   cursor: "pointer",
@@ -594,48 +720,55 @@ function TransactionsView({ email, user_id }) {
                 <option value="Jul">July</option>
                 <option value="Jun">June</option>
               </select>
-              <span style={{ color: "#718096", fontSize: "13px" }}>{filteredAndSortedTransactions.length} entries</span>
+              
+              <span style={{ color: "var(--text-secondary)", fontSize: "12px", whiteSpace: "nowrap" }}>
+                Showing {displayedTransactions.length} of {filteredAndSortedTransactions.length}
+              </span>
             </div>
           </div>
 
-          <div style={{ overflowX: "auto" }}>
+          <div style={{ overflowY: "auto", maxHeight: "480px" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
               <thead>
-                <tr style={{ borderBottom: "1px solid #1b2135" }}>
+                <tr style={{ borderBottom: "1px solid var(--border-color)" }}>
                   <th 
                     onClick={handleSortToggle}
                     style={{ 
                       padding: "12px 16px", 
-                      color: "#718096", 
+                      color: "var(--text-secondary)", 
                       fontSize: "13px", 
                       fontWeight: "600", 
                       textTransform: "uppercase", 
                       letterSpacing: "0.5px",
                       cursor: "pointer",
                       userSelect: "none",
+                      position: "sticky",
+                      top: 0,
+                      backgroundColor: "var(--bg-card)",
+                      zIndex: 1,
                     }}
                   >
                     Date {sortDirection === "desc" ? "▼" : "▲"}
                   </th>
-                  <th style={{ padding: "12px 16px", color: "#718096", fontSize: "13px", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.5px" }}>Category</th>
-                  <th style={{ padding: "12px 16px", color: "#718096", fontSize: "13px", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.5px" }}>Amount</th>
-                  <th style={{ padding: "12px 16px", color: "#718096", fontSize: "13px", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.5px", textAlign: "right" }}>Action</th>
+                  <th style={{ padding: "12px 16px", color: "var(--text-secondary)", fontSize: "13px", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.5px", position: "sticky", top: 0, backgroundColor: "var(--bg-card)", zIndex: 1 }}>Category</th>
+                  <th style={{ padding: "12px 16px", color: "var(--text-secondary)", fontSize: "13px", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.5px", position: "sticky", top: 0, backgroundColor: "var(--bg-card)", zIndex: 1 }}>Amount</th>
+                  <th style={{ padding: "12px 16px", color: "var(--text-secondary)", fontSize: "13px", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.5px", textAlign: "right", position: "sticky", top: 0, backgroundColor: "var(--bg-card)", zIndex: 1 }}>Action</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredAndSortedTransactions.length === 0 ? (
+                {displayedTransactions.length === 0 ? (
                   <tr>
-                    <td colSpan="4" style={{ padding: "32px 16px", textAlign: "center", color: "#718096", fontSize: "14px" }}>
+                    <td colSpan="4" style={{ padding: "32px 16px", textAlign: "center", color: "var(--text-secondary)", fontSize: "14px" }}>
                       {viewTrash ? "Trash bin is empty." : "No transactions logged yet."}
                     </td>
                   </tr>
                 ) : (
-                  filteredAndSortedTransactions.map((tx) => {
+                  displayedTransactions.map((tx) => {
                     const styleData = getCategoryStyles(tx.category);
                     const isEditingThis = editingId === tx.id;
                     return (
-                      <tr key={tx.id} style={{ borderBottom: "1px solid #1c2333", backgroundColor: isEditingThis ? "rgba(0, 216, 246, 0.04)" : "transparent" }}>
-                        <td style={{ padding: "16px", fontSize: "14px", color: "#A0AEC0" }}>{tx.date}</td>
+                      <tr key={tx.id} style={{ borderBottom: "1px solid var(--border-color)", backgroundColor: isEditingThis ? "rgba(0, 216, 246, 0.04)" : "transparent" }}>
+                        <td style={{ padding: "16px", fontSize: "14px", color: "var(--text-secondary)" }}>{tx.date}</td>
                         <td style={{ padding: "16px" }}>
                           <span
                             style={{
@@ -654,7 +787,7 @@ function TransactionsView({ email, user_id }) {
                             {tx.category}
                           </span>
                         </td>
-                        <td style={{ padding: "16px", fontSize: "14px", fontWeight: "700", color: "#FFF" }}>
+                        <td style={{ padding: "16px", fontSize: "14px", fontWeight: "700", color: "var(--text-primary)" }}>
                           ₱{tx.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </td>
                         <td style={{ padding: "16px", textAlign: "right" }}>
@@ -668,14 +801,14 @@ function TransactionsView({ email, user_id }) {
                                   backgroundColor: "transparent",
                                   border: "none",
                                   cursor: "pointer",
-                                  color: "#718096",
+                                  color: "var(--text-secondary)",
                                   transition: "color 0.2s ease",
                                   display: "inline-flex",
                                   alignItems: "center",
                                   padding: "4px",
                                 }}
                                 onMouseEnter={(e) => e.currentTarget.style.color = "#00d8f6"}
-                                onMouseLeave={(e) => e.currentTarget.style.color = "#718096"}
+                                onMouseLeave={(e) => e.currentTarget.style.color = "var(--text-secondary)"}
                               >
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                   <path d="M2.5 2v6h6M21.5 22v-6h-6" />
@@ -691,14 +824,14 @@ function TransactionsView({ email, user_id }) {
                                   backgroundColor: "transparent",
                                   border: "none",
                                   cursor: "pointer",
-                                  color: "#718096",
+                                  color: "var(--text-secondary)",
                                   transition: "color 0.2s ease",
                                   display: "inline-flex",
                                   alignItems: "center",
                                   padding: "4px",
                                 }}
                                 onMouseEnter={(e) => e.currentTarget.style.color = "#FF5252"}
-                                onMouseLeave={(e) => e.currentTarget.style.color = "#718096"}
+                                onMouseLeave={(e) => e.currentTarget.style.color = "var(--text-secondary)"}
                               >
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                   <polyline points="3 6 5 6 21 6" />
@@ -718,7 +851,7 @@ function TransactionsView({ email, user_id }) {
                                   backgroundColor: "transparent",
                                   border: "none",
                                   cursor: "pointer",
-                                  color: isEditingThis ? "#00d8f6" : "#718096",
+                                  color: isEditingThis ? "#00d8f6" : "var(--text-secondary)",
                                   transition: "color 0.2s ease-in-out",
                                   display: "inline-flex",
                                   alignItems: "center",
@@ -726,7 +859,7 @@ function TransactionsView({ email, user_id }) {
                                   padding: "4px",
                                 }}
                                 onMouseEnter={(e) => e.currentTarget.style.color = "#00d8f6"}
-                                onMouseLeave={(e) => e.currentTarget.style.color = isEditingThis ? "#00d8f6" : "#718096"}
+                                onMouseLeave={(e) => e.currentTarget.style.color = isEditingThis ? "#00d8f6" : "var(--text-secondary)"}
                               >
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
@@ -742,7 +875,7 @@ function TransactionsView({ email, user_id }) {
                                   backgroundColor: "transparent",
                                   border: "none",
                                   cursor: "pointer",
-                                  color: "#718096",
+                                  color: "var(--text-secondary)",
                                   transition: "color 0.2s ease-in-out",
                                   display: "inline-flex",
                                   alignItems: "center",
@@ -750,9 +883,9 @@ function TransactionsView({ email, user_id }) {
                                   padding: "4px",
                                 }}
                                 onMouseEnter={(e) => e.currentTarget.style.color = "#FF5252"}
-                                onMouseLeave={(e) => e.currentTarget.style.color = "#718096"}
+                                onMouseLeave={(e) => e.currentTarget.style.color = "var(--text-secondary)"}
                               >
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                   <polyline points="3 6 5 6 21 6" />
                                   <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                                 </svg>
@@ -779,16 +912,16 @@ function TransactionsView({ email, user_id }) {
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: "rgba(5, 7, 12, 0.85)",
+          backgroundColor: "var(--modal-overlay)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           zIndex: 1000,
-          backdropFilter: "blur(4px)",
+          backdropFilter: "blur(1.5px)",
         }}>
           <div style={{
-            backgroundColor: "#111625",
-            border: "1px solid #1b2135",
+            backgroundColor: "var(--bg-card)",
+            border: "1px solid var(--border-color)",
             borderRadius: "16px",
             padding: "30px",
             maxWidth: "400px",
@@ -796,10 +929,10 @@ function TransactionsView({ email, user_id }) {
             boxShadow: "0px 10px 30px rgba(0, 0, 0, 0.7)",
             textAlign: "left"
           }}>
-            <h3 style={{ margin: "0 0 12px 0", color: "#FFF", fontSize: "18px", fontWeight: "700" }}>
+            <h3 style={{ margin: "0 0 12px 0", color: "var(--text-primary)", fontSize: "18px", fontWeight: "700" }}>
               {modalConfig.title}
             </h3>
-            <p style={{ margin: "0 0 24px 0", color: "#A0AEC0", fontSize: "14px", lineHeight: "1.5" }}>
+            <p style={{ margin: "0 0 24px 0", color: "var(--text-secondary)", fontSize: "14px", lineHeight: "1.5" }}>
               {modalConfig.message}
             </p>
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px" }}>
@@ -807,8 +940,8 @@ function TransactionsView({ email, user_id }) {
                 onClick={() => setShowModal(false)}
                 style={{
                   backgroundColor: "transparent",
-                  border: "1px solid #1b2135",
-                  color: "#A0AEC0",
+                  border: "1px solid var(--border-color)",
+                  color: "var(--text-secondary)",
                   padding: "8px 16px",
                   borderRadius: "6px",
                   fontSize: "14px",

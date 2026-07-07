@@ -63,13 +63,13 @@ export default function PasswordView({ email, onLogout, hasPassword, onPasswordS
   };
 
   return (
-    <div style={{ color: "#F3F4F6", fontFamily: "system-ui, -apple-system, sans-serif", textAlign: "left" }}>
+    <div style={{ color: "var(--text-primary)", fontFamily: "system-ui, -apple-system, sans-serif", textAlign: "left" }}>
       {/* Header */}
       <div style={{ marginBottom: "36px" }}>
-        <h1 style={{ fontSize: "32px", fontWeight: "700", color: "#FFF", margin: "0 0 6px 0" }}>
+        <h1 style={{ fontSize: "32px", fontWeight: "700", color: "var(--text-primary)", margin: "0 0 6px 0" }}>
           {hasPassword ? "Change Password" : "Create Password"}
         </h1>
-        <p style={{ color: "#718096", fontSize: "16px", margin: 0 }}>
+        <p style={{ color: "var(--text-secondary)", fontSize: "16px", margin: 0 }}>
           {hasPassword
             ? "Update your existing account password."
             : "Set a password for your account to enable direct email logins."}
@@ -79,12 +79,11 @@ export default function PasswordView({ email, onLogout, hasPassword, onPasswordS
       {/* Form Container */}
       <div
         style={{
-          backgroundColor: "#111625",
-          border: "1px solid #1b2135",
+          backgroundColor: "var(--bg-card)",
+          border: "1px solid var(--border-color)",
           borderRadius: "16px",
           padding: "36px",
           maxWidth: "480px",
-          boxShadow: "0px 10px 30px rgba(0, 0, 0, 0.5)",
         }}
       >
         {message.text && (
@@ -108,10 +107,10 @@ export default function PasswordView({ email, onLogout, hasPassword, onPasswordS
           {/* Old Password Field (Only if they already have one) */}
           {hasPassword && (
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-              <label style={{ color: "#A0AEC0", fontSize: "14px", fontWeight: "500" }}>Old Password</label>
+              <label style={{ color: "var(--text-secondary)", fontSize: "14px", fontWeight: "500" }}>Old Password</label>
               <div style={{ position: "relative" }}>
                 <span style={{ position: "absolute", left: "16px", top: "12px", display: "flex", alignItems: "center" }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#718096" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--text-secondary)" }}>
                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                     <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                   </svg>
@@ -124,11 +123,11 @@ export default function PasswordView({ email, onLogout, hasPassword, onPasswordS
                   required
                   style={{
                     width: "100%",
-                    backgroundColor: "#080B11",
-                    border: "1px solid #1b2135",
+                    backgroundColor: "var(--bg-card-inner)",
+                    border: "1px solid var(--border-color)",
                     borderRadius: "8px",
                     padding: "12px 16px 12px 46px",
-                    color: "#FFF",
+                    color: "var(--text-primary)",
                     fontSize: "15px",
                     outline: "none",
                     boxSizing: "border-box",
@@ -140,12 +139,12 @@ export default function PasswordView({ email, onLogout, hasPassword, onPasswordS
 
           {/* New Password Field */}
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            <label style={{ color: "#A0AEC0", fontSize: "14px", fontWeight: "500" }}>
+            <label style={{ color: "var(--text-secondary)", fontSize: "14px", fontWeight: "500" }}>
               {hasPassword ? "New Password" : "Password"}
             </label>
             <div style={{ position: "relative" }}>
               <span style={{ position: "absolute", left: "16px", top: "12px", display: "flex", alignItems: "center" }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#718096" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--text-secondary)" }}>
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                   <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                 </svg>
@@ -158,11 +157,11 @@ export default function PasswordView({ email, onLogout, hasPassword, onPasswordS
                 required
                 style={{
                   width: "100%",
-                  backgroundColor: "#080B11",
-                  border: "1px solid #1b2135",
+                  backgroundColor: "var(--bg-card-inner)",
+                  border: "1px solid var(--border-color)",
                   borderRadius: "8px",
                   padding: "12px 16px 12px 46px",
-                  color: "#FFF",
+                  color: "var(--text-primary)",
                   fontSize: "15px",
                   outline: "none",
                   boxSizing: "border-box",
@@ -171,14 +170,12 @@ export default function PasswordView({ email, onLogout, hasPassword, onPasswordS
             </div>
           </div>
 
-          {/* Confirm New Password Field */}
+          {/* Confirm Password Field */}
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            <label style={{ color: "#A0AEC0", fontSize: "14px", fontWeight: "500" }}>
-              {hasPassword ? "Confirm New Password" : "Confirm Password"}
-            </label>
+            <label style={{ color: "var(--text-secondary)", fontSize: "14px", fontWeight: "500" }}>Confirm Password</label>
             <div style={{ position: "relative" }}>
               <span style={{ position: "absolute", left: "16px", top: "12px", display: "flex", alignItems: "center" }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#718096" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--text-secondary)" }}>
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                   <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                 </svg>
@@ -191,11 +188,11 @@ export default function PasswordView({ email, onLogout, hasPassword, onPasswordS
                 required
                 style={{
                   width: "100%",
-                  backgroundColor: "#080B11",
-                  border: "1px solid #1b2135",
+                  backgroundColor: "var(--bg-card-inner)",
+                  border: "1px solid var(--border-color)",
                   borderRadius: "8px",
                   padding: "12px 16px 12px 46px",
-                  color: "#FFF",
+                  color: "var(--text-primary)",
                   fontSize: "15px",
                   outline: "none",
                   boxSizing: "border-box",
@@ -204,13 +201,12 @@ export default function PasswordView({ email, onLogout, hasPassword, onPasswordS
             </div>
           </div>
 
-          {/* Submit Button */}
+          {/* Action button */}
           <button
             type="submit"
             onMouseEnter={() => setIsBtnHovered(true)}
             onMouseLeave={() => setIsBtnHovered(false)}
             style={{
-              width: "100%",
               backgroundColor: isBtnHovered ? "#00e5ff" : "#00b6d3",
               color: "#080B11",
               border: "none",

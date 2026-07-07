@@ -50,7 +50,6 @@ function DashboardView({ email, user_id }) {
   // 4. Category Breakdown calculations
   const categories = { Food: 0, Transport: 0, Utilities: 0, Entertainment: 0 };
   filteredTxs.forEach((tx) => {
-    // Normalize key matching
     let catKey = tx.category;
     if (catKey === "Food" || catKey === "Transport" || catKey === "Utilities" || catKey === "Entertainment") {
       categories[catKey] += parseFloat(tx.amount || 0);
@@ -112,14 +111,14 @@ function DashboardView({ email, user_id }) {
   const trendY2 = 100 - (julySpend / maxTrendSpend) * 80;
 
   return (
-    <div style={{ color: "#F3F4F6", fontFamily: "system-ui, -apple-system, sans-serif" }}>
+    <div style={{ color: "var(--text-primary)", fontFamily: "system-ui, -apple-system, sans-serif" }}>
       {/* Title Header with Month Selector */}
       <div style={{ marginBottom: "36px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ textAlign: "left" }}>
-          <h1 style={{ fontSize: "32px", fontWeight: "700", color: "#FFF", margin: "0 0 6px 0" }}>
+          <h1 style={{ fontSize: "32px", fontWeight: "700", color: "var(--text-primary)", margin: "0 0 6px 0" }}>
             Overview
           </h1>
-          <p style={{ color: "#718096", fontSize: "16px", margin: 0 }}>
+          <p style={{ color: "var(--text-secondary)", fontSize: "16px", margin: 0 }}>
             Your financial insights at a glance.
           </p>
         </div>
@@ -129,11 +128,11 @@ function DashboardView({ email, user_id }) {
           value={selectedMonth}
           onChange={(e) => setSelectedMonth(e.target.value)}
           style={{
-            backgroundColor: "#111625",
-            border: "1px solid #1b2135",
+            backgroundColor: "var(--bg-card)",
+            border: "1px solid var(--border-color)",
             borderRadius: "8px",
             padding: "10px 16px",
-            color: "#A0AEC0",
+            color: "var(--text-primary)",
             fontSize: "14px",
             fontWeight: "600",
             outline: "none",
@@ -150,16 +149,16 @@ function DashboardView({ email, user_id }) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "24px", marginBottom: "32px" }}>
         
         {/* Total Monthly Spend Card */}
-        <div style={{ backgroundColor: "#111625", border: "1px solid #1b2135", borderRadius: "16px", padding: "28px 24px", position: "relative", textAlign: "left" }}>
+        <div style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: "16px", padding: "28px 24px", position: "relative", textAlign: "left" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00d8f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
               </svg>
-              <span style={{ color: "#A0AEC0", fontSize: "15px", fontWeight: "600" }}>Total Spend</span>
+              <span style={{ color: "var(--text-secondary)", fontSize: "15px", fontWeight: "600" }}>Total Spend</span>
             </div>
           </div>
-          <div style={{ fontSize: "36px", fontWeight: "800", color: "#FFF" }}>
+          <div style={{ fontSize: "36px", fontWeight: "800", color: "var(--text-primary)" }}>
             {totalSpendFormatted}
           </div>
           {/* Subtle background pulse icon graphic */}
@@ -171,7 +170,7 @@ function DashboardView({ email, user_id }) {
         </div>
 
         {/* Weekly Average Card */}
-        <div style={{ backgroundColor: "#111625", border: "1px solid #1b2135", borderRadius: "16px", padding: "28px 24px", position: "relative", textAlign: "left" }}>
+        <div style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: "16px", padding: "28px 24px", position: "relative", textAlign: "left" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF9800" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -180,12 +179,12 @@ function DashboardView({ email, user_id }) {
                 <line x1="8" y1="2" x2="8" y2="6" />
                 <line x1="3" y1="10" x2="21" y2="10" />
               </svg>
-              <span style={{ color: "#A0AEC0", fontSize: "15px", fontWeight: "600" }}>Weekly Average</span>
+              <span style={{ color: "var(--text-secondary)", fontSize: "15px", fontWeight: "600" }}>Weekly Average</span>
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
-            <span style={{ fontSize: "36px", fontWeight: "800", color: "#FFF" }}>{weeklyAveFormatted}</span>
-            <span style={{ fontSize: "15px", color: "#718096" }}>/wk</span>
+            <span style={{ fontSize: "36px", fontWeight: "800", color: "var(--text-primary)" }}>{weeklyAveFormatted}</span>
+            <span style={{ fontSize: "15px", color: "var(--text-secondary)" }}>/wk</span>
           </div>
           {/* Subtle calendar graphic */}
           <div style={{ position: "absolute", right: "24px", bottom: "24px", opacity: 0.15 }}>
@@ -199,7 +198,7 @@ function DashboardView({ email, user_id }) {
         </div>
 
         {/* Daily Average Card */}
-        <div style={{ backgroundColor: "#111625", border: "1px solid #1b2135", borderRadius: "16px", padding: "28px 24px", position: "relative", textAlign: "left" }}>
+        <div style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: "16px", padding: "28px 24px", position: "relative", textAlign: "left" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3F51B5" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -207,12 +206,12 @@ function DashboardView({ email, user_id }) {
                 <line x1="12" y1="20" x2="12" y2="4" />
                 <line x1="6" y1="20" x2="6" y2="14" />
               </svg>
-              <span style={{ color: "#A0AEC0", fontSize: "15px", fontWeight: "600" }}>Daily Average</span>
+              <span style={{ color: "var(--text-secondary)", fontSize: "15px", fontWeight: "600" }}>Daily Average</span>
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
-            <span style={{ fontSize: "36px", fontWeight: "800", color: "#FFF" }}>{dailyAveFormatted}</span>
-            <span style={{ fontSize: "15px", color: "#718096" }}>/day</span>
+            <span style={{ fontSize: "36px", fontWeight: "800", color: "var(--text-primary)" }}>{dailyAveFormatted}</span>
+            <span style={{ fontSize: "15px", color: "var(--text-secondary)" }}>/day</span>
           </div>
           {/* Trend arrow graphic */}
           <div style={{ position: "absolute", right: "24px", bottom: "24px", opacity: 0.15 }}>
@@ -224,23 +223,23 @@ function DashboardView({ email, user_id }) {
         </div>
 
         {/* Highest Category Card */}
-        <div style={{ backgroundColor: "#111625", border: "1px solid #1b2135", borderRadius: "16px", padding: "28px 24px", textAlign: "left" }}>
+        <div style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: "16px", padding: "28px 24px", textAlign: "left" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00E676" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10" />
               <polyline points="12 6 12 12 16 14" />
             </svg>
-            <span style={{ color: "#A0AEC0", fontSize: "15px", fontWeight: "600" }}>Highest Category</span>
+            <span style={{ color: "var(--text-secondary)", fontSize: "15px", fontWeight: "600" }}>Highest Category</span>
           </div>
-          <div style={{ fontSize: "36px", fontWeight: "800", color: "#FFF", marginBottom: "12px" }}>
+          <div style={{ fontSize: "36px", fontWeight: "800", color: "var(--text-primary)", marginBottom: "12px" }}>
             {highestCategory}
           </div>
           {/* Progress bar container */}
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <div style={{ flexGrow: 1, height: "8px", backgroundColor: "#1A202C", borderRadius: "4px", overflow: "hidden" }}>
+            <div style={{ flexGrow: 1, height: "8px", backgroundColor: "var(--bg-card-inner)", borderRadius: "4px", overflow: "hidden" }}>
               <div style={{ width: `${highestPercent}%`, height: "100%", backgroundColor: "#00d8f6", borderRadius: "4px" }}></div>
             </div>
-            <span style={{ fontSize: "14px", fontWeight: "bold", color: "#718096" }}>{highestPercent}%</span>
+            <span style={{ fontSize: "14px", fontWeight: "bold", color: "var(--text-secondary)" }}>{highestPercent}%</span>
           </div>
         </div>
       </div>
@@ -249,8 +248,8 @@ function DashboardView({ email, user_id }) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))", gap: "24px" }}>
         
         {/* Spending Breakdown Card */}
-        <div style={{ backgroundColor: "#111625", border: "1px solid #1b2135", borderRadius: "16px", padding: "28px" }}>
-          <h2 style={{ fontSize: "18px", fontWeight: "700", color: "#FFF", margin: "0 0 24px 0", textAlign: "left" }}>
+        <div style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: "16px", padding: "28px" }}>
+          <h2 style={{ fontSize: "18px", fontWeight: "700", color: "var(--text-primary)", margin: "0 0 24px 0", textAlign: "left" }}>
             Spending Breakdown
           </h2>
 
@@ -259,7 +258,7 @@ function DashboardView({ email, user_id }) {
             <div style={{ position: "relative", width: "160px", height: "160px" }}>
               <svg width="160" height="160" viewBox="0 0 36 36" style={{ transform: "rotate(-90deg)" }}>
                 {/* Background circle */}
-                <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#1A202C" strokeWidth="3" />
+                <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="var(--bg-card-inner)" strokeWidth="3" />
                 {/* Segments: Food (Cyan), Utilities (Purple), Entertainment (Green), Transport (Pink) */}
                 <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#00d8f6" strokeWidth="3" strokeDasharray={`${breakdown.food?.percent || 0} ${100 - (breakdown.food?.percent || 0)}`} strokeDashoffset={breakdown.food?.offset || 0} />
                 <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#7928CA" strokeWidth="3" strokeDasharray={`${breakdown.utilities?.percent || 0} ${100 - (breakdown.utilities?.percent || 0)}`} strokeDashoffset={breakdown.utilities?.offset || 0} />
@@ -268,8 +267,8 @@ function DashboardView({ email, user_id }) {
               </svg>
               {/* Inner Label */}
               <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", textAlign: "center" }}>
-                <span style={{ fontSize: "12px", color: "#A0AEC0", display: "block" }}>Total</span>
-                <span style={{ fontSize: "18px", fontWeight: "800", color: "#FFF" }}>{totalSpendFormatted}</span>
+                <span style={{ fontSize: "12px", color: "var(--text-secondary)", display: "block" }}>Total</span>
+                <span style={{ fontSize: "18px", fontWeight: "800", color: "var(--text-primary)" }}>{totalSpendFormatted}</span>
               </div>
             </div>
 
@@ -277,25 +276,25 @@ function DashboardView({ email, user_id }) {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px 24px", textAlign: "left" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 <span style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: "#00d8f6" }}></span>
-                <span style={{ fontSize: "14px", color: breakdown.food?.percent > 0 ? "#FFF" : "#718096", fontWeight: breakdown.food?.percent > 0 ? "bold" : "normal" }}>
+                <span style={{ fontSize: "14px", color: breakdown.food?.percent > 0 ? "var(--text-primary)" : "var(--text-secondary)", fontWeight: breakdown.food?.percent > 0 ? "bold" : "normal" }}>
                   Food ({breakdown.food?.percent || 0}%)
                 </span>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 <span style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: "#7928CA" }}></span>
-                <span style={{ fontSize: "14px", color: breakdown.utilities?.percent > 0 ? "#FFF" : "#718096", fontWeight: breakdown.utilities?.percent > 0 ? "bold" : "normal" }}>
+                <span style={{ fontSize: "14px", color: breakdown.utilities?.percent > 0 ? "var(--text-primary)" : "var(--text-secondary)", fontWeight: breakdown.utilities?.percent > 0 ? "bold" : "normal" }}>
                   Utilities ({breakdown.utilities?.percent || 0}%)
                 </span>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 <span style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: "#00E676" }}></span>
-                <span style={{ fontSize: "14px", color: breakdown.entertainment?.percent > 0 ? "#FFF" : "#718096", fontWeight: breakdown.entertainment?.percent > 0 ? "bold" : "normal" }}>
+                <span style={{ fontSize: "14px", color: breakdown.entertainment?.percent > 0 ? "var(--text-primary)" : "var(--text-secondary)", fontWeight: breakdown.entertainment?.percent > 0 ? "bold" : "normal" }}>
                   Entertainment ({breakdown.entertainment?.percent || 0}%)
                 </span>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 <span style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: "#FF007A" }}></span>
-                <span style={{ fontSize: "14px", color: breakdown.transport?.percent > 0 ? "#FFF" : "#718096", fontWeight: breakdown.transport?.percent > 0 ? "bold" : "normal" }}>
+                <span style={{ fontSize: "14px", color: breakdown.transport?.percent > 0 ? "var(--text-primary)" : "var(--text-secondary)", fontWeight: breakdown.transport?.percent > 0 ? "bold" : "normal" }}>
                   Transport ({breakdown.transport?.percent || 0}%)
                 </span>
               </div>
@@ -304,11 +303,11 @@ function DashboardView({ email, user_id }) {
         </div>
 
         {/* Spend Trends Line Chart */}
-        <div style={{ backgroundColor: "#111625", border: "1px solid #1b2135", borderRadius: "16px", padding: "28px" }}>
-          <h2 style={{ fontSize: "18px", fontWeight: "700", color: "#FFF", margin: "0 0 10px 0", textAlign: "left" }}>
+        <div style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: "16px", padding: "28px" }}>
+          <h2 style={{ fontSize: "18px", fontWeight: "700", color: "var(--text-primary)", margin: "0 0 10px 0", textAlign: "left" }}>
             Monthly Spend Trends
           </h2>
-          <p style={{ color: "#718096", fontSize: "14px", margin: "0 0 28px 0", textAlign: "left" }}>
+          <p style={{ color: "var(--text-secondary)", fontSize: "14px", margin: "0 0 28px 0", textAlign: "left" }}>
             Comparison between June and July total spending.
           </p>
 
@@ -316,9 +315,9 @@ function DashboardView({ email, user_id }) {
             {/* SVG Line Chart */}
             <svg width="100%" height="100%" viewBox="0 0 300 120" preserveAspectRatio="none">
               {/* Grid Lines */}
-              <line x1="0" y1="100" x2="300" y2="100" stroke="#1A202C" strokeWidth="1" strokeDasharray="4 4" />
-              <line x1="0" y1="60" x2="300" y2="60" stroke="#1A202C" strokeWidth="1" strokeDasharray="4 4" />
-              <line x1="0" y1="20" x2="300" y2="20" stroke="#1A202C" strokeWidth="1" strokeDasharray="4 4" />
+              <line x1="0" y1="100" x2="300" y2="100" stroke="var(--bg-card-inner)" strokeWidth="1" strokeDasharray="4 4" />
+              <line x1="0" y1="60" x2="300" y2="60" stroke="var(--bg-card-inner)" strokeWidth="1" strokeDasharray="4 4" />
+              <line x1="0" y1="20" x2="300" y2="20" stroke="var(--bg-card-inner)" strokeWidth="1" strokeDasharray="4 4" />
 
               {/* Gradient beneath the line */}
               <defs>
@@ -341,14 +340,14 @@ function DashboardView({ email, user_id }) {
             <div style={{ position: "absolute", left: "20px", top: `${trendY1 - 25}px`, color: "#00d8f6", fontSize: "14px", fontWeight: "bold" }}>
               {trendVal1}
             </div>
-            <div style={{ position: "absolute", left: "20px", bottom: "-10px", color: "#A0AEC0", fontSize: "12px", fontWeight: "600" }}>
+            <div style={{ position: "absolute", left: "20px", bottom: "-10px", color: "var(--text-secondary)", fontSize: "12px", fontWeight: "600" }}>
               June
             </div>
 
             <div style={{ position: "absolute", right: "20px", top: `${trendY2 - 25}px`, color: "#00d8f6", fontSize: "14px", fontWeight: "bold" }}>
               {trendVal2}
             </div>
-            <div style={{ position: "absolute", right: "20px", bottom: "-10px", color: "#A0AEC0", fontSize: "12px", fontWeight: "600" }}>
+            <div style={{ position: "absolute", right: "20px", bottom: "-10px", color: "var(--text-secondary)", fontSize: "12px", fontWeight: "600" }}>
               July
             </div>
           </div>
