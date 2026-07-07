@@ -149,7 +149,7 @@ app.post('/api/auth/password', async (req, res) => {
         const userCheck = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
 
         if (userCheck.rows.length === 0) {
-            return res.status(404).json({ error: 'User not found' });
+            return res.status(404).json({ error: 'Email not found. Please sign up or login with Google.' });
         }
 
         const user = userCheck.rows[0];

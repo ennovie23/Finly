@@ -17,6 +17,7 @@ function App() {
   const [hasPassword, setHasPassword] = useState(
     () => localStorage.getItem("spendsight_hasPassword") === "true",
   );
+  const [loginError, setLoginError] = useState("");
 
   const login = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
@@ -42,30 +43,48 @@ function App() {
           localStorage.setItem("spendsight_hasPassword", String(data.user.hasPassword));
         } else {
           console.error("Google login failed on backend:", data.error);
-          alert(`Google Authentication failed: ${data.error}`);
+          setLoginError(data.error || "Google login failed.");
         }
       } catch (err) {
         console.error("Network error authenticating with backend:", err);
+        setLoginError("Network error authenticating with Google.");
       }
     },
     onError: (error) => console.log("Google Login Failed:", error),
   });
 
   // 2. Form submission handler function
-  const handleLogin = (e) => {
-    e.preventDefault(); // Prevents the browser from reloading the page
-    console.log("Submitting login credentials across pipeline:", {
-      email,
-      password,
-    });
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setLoginError("");
 
-    // Navigate to the empty page by updating state
-    setIsLoggedIn(true);
-    setHasPassword(true);
-    localStorage.setItem("spendsight_email", email);
-    localStorage.setItem("spendsight_isLoggedIn", "true");
-    localStorage.setItem("spendsight_hasPassword", "true");
+    try {
+      const response = await fetch("http://localhost:5001/api/auth/password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setEmail(data.user.email);
+        setIsLoggedIn(true);
+        setHasPassword(data.user.hasPassword);
+        localStorage.setItem("spendsight_email", data.user.email);
+        localStorage.setItem("spendsight_isLoggedIn", "true");
+        localStorage.setItem("spendsight_hasPassword", String(data.user.hasPassword));
+      } else {
+        setLoginError(data.error || "Login failed.");
+      }
+    } catch (err) {
+      console.error("Network error during password login:", err);
+      setLoginError("Network error. Please make sure the backend is running.");
+    }
   };
+
 
   const handleLogout = () => {
     setIsLoggedIn(false);
@@ -173,6 +192,7 @@ function App() {
         >
           Enter your details to access your dashboard.
         </p>
+
 
         {/* Input Form Container */}
         <form
@@ -290,6 +310,25 @@ function App() {
               }}
             />
           </div>
+
+
+        {loginError && (
+          <div
+            style={{
+              padding: "12px 16px",
+              borderRadius: "8px",
+              fontSize: "14px",
+              fontWeight: "600",
+              marginBottom: "20px",
+              backgroundColor: "rgba(255, 82, 82, 0.1)",
+              color: "#FF5252",
+              border: "1px solid rgba(255, 82, 82, 0.2)",
+              textAlign: "left",
+            }}
+          >
+            {loginError}
+          </div>
+        )}
 
           {/* Login Button */}
           <button
