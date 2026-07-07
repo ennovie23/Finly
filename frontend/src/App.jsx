@@ -17,6 +17,9 @@ function App() {
   const [hasPassword, setHasPassword] = useState(
     () => localStorage.getItem("spendsight_hasPassword") === "true",
   );
+  const [userId, setUserId] = useState(
+    () => localStorage.getItem("spendsight_userId") || ""
+  );
   const [loginError, setLoginError] = useState("");
 
   const login = useGoogleLogin({
@@ -38,9 +41,11 @@ function App() {
           setEmail(data.user.email);
           setIsLoggedIn(true);
           setHasPassword(data.user.hasPassword);
+          setUserId(data.user.id);
           localStorage.setItem("spendsight_email", data.user.email);
           localStorage.setItem("spendsight_isLoggedIn", "true");
           localStorage.setItem("spendsight_hasPassword", String(data.user.hasPassword));
+          localStorage.setItem("spendsight_userId", String(data.user.id));
         } else {
           console.error("Google login failed on backend:", data.error);
           setLoginError(data.error || "Google login failed.");
@@ -73,9 +78,11 @@ function App() {
         setEmail(data.user.email);
         setIsLoggedIn(true);
         setHasPassword(data.user.hasPassword);
+        setUserId(data.user.id);
         localStorage.setItem("spendsight_email", data.user.email);
         localStorage.setItem("spendsight_isLoggedIn", "true");
         localStorage.setItem("spendsight_hasPassword", String(data.user.hasPassword));
+        localStorage.setItem("spendsight_userId", String(data.user.id));
       } else {
         setLoginError(data.error || "Login failed.");
       }
@@ -90,9 +97,11 @@ function App() {
     setIsLoggedIn(false);
     setEmail("");
     setHasPassword(false);
+    setUserId("");
     localStorage.removeItem("spendsight_email");
     localStorage.removeItem("spendsight_isLoggedIn");
     localStorage.removeItem("spendsight_hasPassword");
+    localStorage.removeItem("spendsight_userId");
   };
 
   const handlePasswordSet = () => {
@@ -115,7 +124,7 @@ function App() {
   }, [isLoggedIn, email]);
 
   if (isLoggedIn) {
-    return <Dashboard email={email} onLogout={handleLogout} hasPassword={hasPassword} onPasswordSet={handlePasswordSet} />;
+    return <Dashboard email={email} onLogout={handleLogout} hasPassword={hasPassword} onPasswordSet={handlePasswordSet} userId={userId} />;
   }
 
   return (

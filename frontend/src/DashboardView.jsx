@@ -1,75 +1,115 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-function DashboardView({ email }) {
+function DashboardView({ email, user_id }) {
   const [selectedMonth, setSelectedMonth] = useState("All");
+  const [transactions, setTransactions] = useState([]);
 
-  const dataSets = {
-    All: {
-      totalSpend: "₱12,500",
-      weeklyAve: "₱3,125",
-      dailyAve: "₱1,250",
-      highestCategory: "Food",
-      highestPercent: 37,
-      breakdown: {
-        food: { percent: 37, offset: 0 },
-        utilities: { percent: 25, offset: -37 },
-        entertainment: { percent: 23, offset: -62 },
-        transport: { percent: 15, offset: -85 }
-      },
-      trends: {
-        val1: "₱8k",
-        val2: "₱4k",
-        y1: 40,
-        y2: 100,
-        label1: "Jun",
-        label2: "Jul"
+  // Load all expenses on mount
+  useEffect(() => {
+    fetchExpenses();
+  }, [user_id]);
+
+  const fetchExpenses = async () => {
+    if (!user_id) return;
+    try {
+      const response = await fetch(`http://localhost:5001/api/expenses?user_id=${user_id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setTransactions(data);
       }
-    },
-    Jul: {
-      totalSpend: "₱4,250",
-      weeklyAve: "₱1,062",
-      dailyAve: "₱531",
-      highestCategory: "Utilities",
-      highestPercent: 58,
-      breakdown: {
-        food: { percent: 20, offset: -58 },
-        utilities: { percent: 58, offset: 0 },
-        entertainment: { percent: 12, offset: -78 },
-        transport: { percent: 10, offset: -90 }
-      },
-      trends: {
-        val1: "₱1.5k",
-        val2: "₱2.75k",
-        y1: 100,
-        y2: 50,
-        label1: "Jul W1",
-        label2: "Jul W2"
-      }
-    },
-    Jun: {
-      totalSpend: "₱8,250",
-      weeklyAve: "₱2,062",
-      dailyAve: "₱1,031",
-      highestCategory: "Food",
-      highestPercent: 45,
-      breakdown: {
-        food: { percent: 45, offset: 0 },
-        utilities: { percent: 15, offset: -45 },
-        entertainment: { percent: 25, offset: -60 },
-        transport: { percent: 15, offset: -85 }
-      },
-      trends: {
-        val1: "₱5k",
-        val2: "₱3.25k",
-        y1: 30,
-        y2: 80,
-        label1: "Jun W1",
-        label2: "Jun W2"
-      }
+    } catch (err) {
+      console.error("Failed to fetch expenses in dashboard overview:", err);
     }
   };
 
-  const activeData = dataSets[selectedMonth] || dataSets.All;
+  const getMonthName = (dateStr) => {
+    if (!dateStr) return "";
+    const dateObj = new Date(dateStr);
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    return months[dateObj.getMonth()];
+  };
+
+  // Filter transactions based on selected month
+  const filteredTxs = transactions.filter((tx) => {
+    if (selectedMonth === "All") return true;
+    return getMonthName(tx.date) === selectedMonth;
+  });
+
+  // 1. Total Spend
+  const totalSpendVal = filteredTxs.reduce((sum, tx) => sum + parseFloat(tx.amount || 0), 0);
+  const totalSpendFormatted = `₱${totalSpendVal.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+
+  // 2. Weekly Average (assume 4 weeks per month)
+  const weeklyAveVal = totalSpendVal / 4;
+  const weeklyAveFormatted = `₱${weeklyAveVal.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+
+  // 3. Daily Average (assume 30 days per month)
+  const dailyAveVal = totalSpendVal / 30;
+  const dailyAveFormatted = `₱${dailyAveVal.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+
+  // 4. Category Breakdown calculations
+  const categories = { Food: 0, Transport: 0, Utilities: 0, Entertainment: 0 };
+  filteredTxs.forEach((tx) => {
+    // Normalize key matching
+    let catKey = tx.category;
+    if (catKey === "Food" || catKey === "Transport" || catKey === "Utilities" || catKey === "Entertainment") {
+      categories[catKey] += parseFloat(tx.amount || 0);
+    }
+  });
+
+  const catPercentages = {};
+  let highestCategory = "None";
+  let highestVal = 0;
+  let highestPercent = 0;
+
+  const totalCategorySpend = Object.values(categories).reduce((s, v) => s + v, 0);
+  if (totalCategorySpend > 0) {
+    Object.keys(categories).forEach((cat) => {
+      const pct = Math.round((categories[cat] / totalCategorySpend) * 100);
+      catPercentages[cat] = pct;
+      if (categories[cat] > highestVal) {
+        highestVal = categories[cat];
+        highestCategory = cat;
+        highestPercent = pct;
+      }
+    });
+  }
+
+  // Calculate donut offsets
+  let runningOffset = 0;
+  const breakdown = {};
+  ["Food", "Utilities", "Entertainment", "Transport"].forEach((cat) => {
+    const pct = catPercentages[cat] || 0;
+    breakdown[cat.toLowerCase()] = {
+      percent: pct,
+      offset: -runningOffset,
+    };
+    runningOffset += pct;
+  });
+
+  // 5. Line Chart (Trends)
+  const getMonthSpend = (monthName) => {
+    return transactions
+      .filter((tx) => getMonthName(tx.date) === monthName)
+      .reduce((sum, tx) => sum + parseFloat(tx.amount || 0), 0);
+  };
+
+  const juneSpend = getMonthSpend("Jun");
+  const julySpend = getMonthSpend("Jul");
+
+  const formatCurrencySimple = (val) => {
+    if (val >= 1000) {
+      return `₱${(val / 1000).toFixed(1)}k`;
+    }
+    return `₱${val}`;
+  };
+
+  const trendVal1 = formatCurrencySimple(juneSpend);
+  const trendVal2 = formatCurrencySimple(julySpend);
+
+  const maxTrendSpend = Math.max(juneSpend, julySpend, 1000);
+  const trendY1 = 100 - (juneSpend / maxTrendSpend) * 80;
+  const trendY2 = 100 - (julySpend / maxTrendSpend) * 80;
 
   return (
     <div style={{ color: "#F3F4F6", fontFamily: "system-ui, -apple-system, sans-serif" }}>
@@ -120,7 +160,7 @@ function DashboardView({ email }) {
             </div>
           </div>
           <div style={{ fontSize: "36px", fontWeight: "800", color: "#FFF" }}>
-            {activeData.totalSpend}
+            {totalSpendFormatted}
           </div>
           {/* Subtle background pulse icon graphic */}
           <div style={{ position: "absolute", right: "24px", bottom: "24px", opacity: 0.15 }}>
@@ -144,7 +184,7 @@ function DashboardView({ email }) {
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
-            <span style={{ fontSize: "36px", fontWeight: "800", color: "#FFF" }}>{activeData.weeklyAve}</span>
+            <span style={{ fontSize: "36px", fontWeight: "800", color: "#FFF" }}>{weeklyAveFormatted}</span>
             <span style={{ fontSize: "15px", color: "#718096" }}>/wk</span>
           </div>
           {/* Subtle calendar graphic */}
@@ -171,7 +211,7 @@ function DashboardView({ email }) {
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
-            <span style={{ fontSize: "36px", fontWeight: "800", color: "#FFF" }}>{activeData.dailyAve}</span>
+            <span style={{ fontSize: "36px", fontWeight: "800", color: "#FFF" }}>{dailyAveFormatted}</span>
             <span style={{ fontSize: "15px", color: "#718096" }}>/day</span>
           </div>
           {/* Trend arrow graphic */}
@@ -193,14 +233,14 @@ function DashboardView({ email }) {
             <span style={{ color: "#A0AEC0", fontSize: "15px", fontWeight: "600" }}>Highest Category</span>
           </div>
           <div style={{ fontSize: "36px", fontWeight: "800", color: "#FFF", marginBottom: "12px" }}>
-            {activeData.highestCategory}
+            {highestCategory}
           </div>
           {/* Progress bar container */}
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <div style={{ flexGrow: 1, height: "8px", backgroundColor: "#1A202C", borderRadius: "4px", overflow: "hidden" }}>
-              <div style={{ width: `${activeData.highestPercent}%`, height: "100%", backgroundColor: "#00d8f6", borderRadius: "4px" }}></div>
+              <div style={{ width: `${highestPercent}%`, height: "100%", backgroundColor: "#00d8f6", borderRadius: "4px" }}></div>
             </div>
-            <span style={{ fontSize: "14px", fontWeight: "bold", color: "#718096" }}>{activeData.highestPercent}%</span>
+            <span style={{ fontSize: "14px", fontWeight: "bold", color: "#718096" }}>{highestPercent}%</span>
           </div>
         </div>
       </div>
@@ -221,15 +261,15 @@ function DashboardView({ email }) {
                 {/* Background circle */}
                 <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#1A202C" strokeWidth="3" />
                 {/* Segments: Food (Cyan), Utilities (Purple), Entertainment (Green), Transport (Pink) */}
-                <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#00d8f6" strokeWidth="3" strokeDasharray={`${activeData.breakdown.food?.percent || 0} ${100 - (activeData.breakdown.food?.percent || 0)}`} strokeDashoffset={activeData.breakdown.food?.offset || 0} />
-                <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#7928CA" strokeWidth="3" strokeDasharray={`${activeData.breakdown.utilities?.percent || 0} ${100 - (activeData.breakdown.utilities?.percent || 0)}`} strokeDashoffset={activeData.breakdown.utilities?.offset || 0} />
-                <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#00E676" strokeWidth="3" strokeDasharray={`${activeData.breakdown.entertainment?.percent || 0} ${100 - (activeData.breakdown.entertainment?.percent || 0)}`} strokeDashoffset={activeData.breakdown.entertainment?.offset || 0} />
-                <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#FF007A" strokeWidth="3" strokeDasharray={`${activeData.breakdown.transport?.percent || 0} ${100 - (activeData.breakdown.transport?.percent || 0)}`} strokeDashoffset={activeData.breakdown.transport?.offset || 0} />
+                <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#00d8f6" strokeWidth="3" strokeDasharray={`${breakdown.food?.percent || 0} ${100 - (breakdown.food?.percent || 0)}`} strokeDashoffset={breakdown.food?.offset || 0} />
+                <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#7928CA" strokeWidth="3" strokeDasharray={`${breakdown.utilities?.percent || 0} ${100 - (breakdown.utilities?.percent || 0)}`} strokeDashoffset={breakdown.utilities?.offset || 0} />
+                <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#00E676" strokeWidth="3" strokeDasharray={`${breakdown.entertainment?.percent || 0} ${100 - (breakdown.entertainment?.percent || 0)}`} strokeDashoffset={breakdown.entertainment?.offset || 0} />
+                <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#FF007A" strokeWidth="3" strokeDasharray={`${breakdown.transport?.percent || 0} ${100 - (breakdown.transport?.percent || 0)}`} strokeDashoffset={breakdown.transport?.offset || 0} />
               </svg>
               {/* Inner Label */}
               <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", textAlign: "center" }}>
                 <span style={{ fontSize: "12px", color: "#A0AEC0", display: "block" }}>Total</span>
-                <span style={{ fontSize: "18px", fontWeight: "800", color: "#FFF" }}>{activeData.totalSpend}</span>
+                <span style={{ fontSize: "18px", fontWeight: "800", color: "#FFF" }}>{totalSpendFormatted}</span>
               </div>
             </div>
 
@@ -237,64 +277,82 @@ function DashboardView({ email }) {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px 24px", textAlign: "left" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 <span style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: "#00d8f6" }}></span>
-                <span style={{ fontSize: "14px", color: activeData.breakdown.food ? "#FFF" : "#718096", fontWeight: activeData.breakdown.food ? "bold" : "normal" }}>
-                  Food ({activeData.breakdown.food?.percent || 0}%)
+                <span style={{ fontSize: "14px", color: breakdown.food?.percent > 0 ? "#FFF" : "#718096", fontWeight: breakdown.food?.percent > 0 ? "bold" : "normal" }}>
+                  Food ({breakdown.food?.percent || 0}%)
                 </span>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 <span style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: "#7928CA" }}></span>
-                <span style={{ fontSize: "14px", color: activeData.breakdown.utilities ? "#FFF" : "#718096", fontWeight: activeData.breakdown.utilities ? "bold" : "normal" }}>
-                  Utilities ({activeData.breakdown.utilities?.percent || 0}%)
+                <span style={{ fontSize: "14px", color: breakdown.utilities?.percent > 0 ? "#FFF" : "#718096", fontWeight: breakdown.utilities?.percent > 0 ? "bold" : "normal" }}>
+                  Utilities ({breakdown.utilities?.percent || 0}%)
                 </span>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 <span style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: "#00E676" }}></span>
-                <span style={{ fontSize: "14px", color: activeData.breakdown.entertainment ? "#FFF" : "#718096", fontWeight: activeData.breakdown.entertainment ? "bold" : "normal" }}>
-                  Entertainment ({activeData.breakdown.entertainment?.percent || 0}%)
+                <span style={{ fontSize: "14px", color: breakdown.entertainment?.percent > 0 ? "#FFF" : "#718096", fontWeight: breakdown.entertainment?.percent > 0 ? "bold" : "normal" }}>
+                  Entertainment ({breakdown.entertainment?.percent || 0}%)
                 </span>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 <span style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: "#FF007A" }}></span>
-                <span style={{ fontSize: "14px", color: activeData.breakdown.transport ? "#FFF" : "#718096", fontWeight: activeData.breakdown.transport ? "bold" : "normal" }}>
-                  Transport ({activeData.breakdown.transport?.percent || 0}%)
+                <span style={{ fontSize: "14px", color: breakdown.transport?.percent > 0 ? "#FFF" : "#718096", fontWeight: breakdown.transport?.percent > 0 ? "bold" : "normal" }}>
+                  Transport ({breakdown.transport?.percent || 0}%)
                 </span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Spending Trends Card */}
+        {/* Spend Trends Line Chart */}
         <div style={{ backgroundColor: "#111625", border: "1px solid #1b2135", borderRadius: "16px", padding: "28px" }}>
-          <h2 style={{ fontSize: "18px", fontWeight: "700", color: "#FFF", margin: "0 0 24px 0", textAlign: "left" }}>
-            Spending Trends
+          <h2 style={{ fontSize: "18px", fontWeight: "700", color: "#FFF", margin: "0 0 10px 0", textAlign: "left" }}>
+            Monthly Spend Trends
           </h2>
+          <p style={{ color: "#718096", fontSize: "14px", margin: "0 0 28px 0", textAlign: "left" }}>
+            Comparison between June and July total spending.
+          </p>
 
-          {/* SVG Line Chart */}
-          <div style={{ width: "100%", height: "160px", position: "relative" }}>
-            <svg width="100%" height="140" viewBox="0 0 400 140" preserveAspectRatio="none">
-              {/* Horizontal helper gridlines */}
-              <line x1="0" y1="20" x2="400" y2="20" stroke="#1A202C" strokeWidth="1" strokeDasharray="4 4" />
-              <line x1="0" y1="60" x2="400" y2="60" stroke="#1A202C" strokeWidth="1" strokeDasharray="4 4" />
-              <line x1="0" y1="100" x2="400" y2="100" stroke="#1A202C" strokeWidth="1" strokeDasharray="4 4" />
+          <div style={{ position: "relative", width: "100%", height: "140px", boxSizing: "border-box" }}>
+            {/* SVG Line Chart */}
+            <svg width="100%" height="100%" viewBox="0 0 300 120" preserveAspectRatio="none">
+              {/* Grid Lines */}
+              <line x1="0" y1="100" x2="300" y2="100" stroke="#1A202C" strokeWidth="1" strokeDasharray="4 4" />
+              <line x1="0" y1="60" x2="300" y2="60" stroke="#1A202C" strokeWidth="1" strokeDasharray="4 4" />
+              <line x1="0" y1="20" x2="300" y2="20" stroke="#1A202C" strokeWidth="1" strokeDasharray="4 4" />
 
-              {/* Trend line */}
-              <path d={`M 50 ${activeData.trends.y1} L 350 ${activeData.trends.y2}`} fill="none" stroke="#00d8f6" strokeWidth="3" strokeLinecap="round" />
+              {/* Gradient beneath the line */}
+              <defs>
+                <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#00d8f6" stopOpacity="0.3" />
+                  <stop offset="100%" stopColor="#00d8f6" stopOpacity="0.0" />
+                </linearGradient>
+              </defs>
+              <path d={`M 50 ${trendY1} L 250 ${trendY2} L 250 100 L 50 100 Z`} fill="url(#lineGrad)" />
 
-              {/* Data points */}
-              <circle cx="50" cy={activeData.trends.y1} r="5" fill="#00d8f6" stroke="#111625" strokeWidth="2" />
-              <circle cx="350" cy={activeData.trends.y2} r="5" fill="#00d8f6" stroke="#111625" strokeWidth="2" />
+              {/* Main Line */}
+              <path d={`M 50 ${trendY1} L 250 ${trendY2}`} fill="none" stroke="#00d8f6" strokeWidth="3" />
 
-              {/* Value labels */}
-              <text x="50" y={activeData.trends.y1 - 15} fill="#A0AEC0" fontSize="11" textAnchor="middle">{activeData.trends.val1}</text>
-              <text x="350" y={activeData.trends.y2 + 20} fill="#A0AEC0" fontSize="11" textAnchor="middle">{activeData.trends.val2}</text>
-
-              {/* X Axis Labels */}
-              <text x="50" y="138" fill="#718096" fontSize="12" textAnchor="middle">{activeData.trends.label1}</text>
-              <text x="350" y="138" fill="#718096" fontSize="12" textAnchor="middle">{activeData.trends.label2}</text>
+              {/* Line nodes */}
+              <circle cx="50" cy={trendY1} r="5" fill="#FFF" stroke="#00d8f6" strokeWidth="3.5" />
+              <circle cx="250" cy={trendY2} r="5" fill="#FFF" stroke="#00d8f6" strokeWidth="3.5" />
             </svg>
+
+            {/* Labels and values overlay */}
+            <div style={{ position: "absolute", left: "20px", top: `${trendY1 - 25}px`, color: "#00d8f6", fontSize: "14px", fontWeight: "bold" }}>
+              {trendVal1}
+            </div>
+            <div style={{ position: "absolute", left: "20px", bottom: "-10px", color: "#A0AEC0", fontSize: "12px", fontWeight: "600" }}>
+              June
+            </div>
+
+            <div style={{ position: "absolute", right: "20px", top: `${trendY2 - 25}px`, color: "#00d8f6", fontSize: "14px", fontWeight: "bold" }}>
+              {trendVal2}
+            </div>
+            <div style={{ position: "absolute", right: "20px", bottom: "-10px", color: "#A0AEC0", fontSize: "12px", fontWeight: "600" }}>
+              July
+            </div>
           </div>
         </div>
-
       </div>
     </div>
   );
