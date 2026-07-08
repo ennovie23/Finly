@@ -40,7 +40,7 @@ function DashboardView({ email, user_id }) {
     setLoading(true);
     try {
       const response = await fetch(
-        `http://localhost:5001/api/expenses/analytics?user_id=${user_id}&month=${selectedMonth}&year=${selectedYear}`
+        `${import.meta.env.VITE_API_URL}/api/expenses/analytics?user_id=${user_id}&month=${selectedMonth}&year=${selectedYear}`
       );
       if (response.ok) {
         const data = await response.json();
@@ -56,7 +56,7 @@ function DashboardView({ email, user_id }) {
   const fetchExpenses = async () => {
     if (!user_id) return;
     try {
-      const response = await fetch(`http://localhost:5001/api/expenses?user_id=${user_id}`);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/expenses?user_id=${user_id}`);
       if (response.ok) {
         const data = await response.json();
         

@@ -85,7 +85,7 @@ function TransactionsView({ email, user_id }) {
   const fetchExpenses = async () => {
     if (!user_id) return;
     try {
-      const response = await fetch(`http://localhost:5001/api/expenses?user_id=${user_id}`);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/expenses?user_id=${user_id}`);
       if (response.ok) {
         const data = await response.json();
         const formattedData = data.map((tx) => ({
@@ -106,7 +106,7 @@ function TransactionsView({ email, user_id }) {
   const fetchTrash = async () => {
     if (!user_id) return;
     try {
-      const response = await fetch(`http://localhost:5001/api/expenses/trash?user_id=${user_id}`);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/expenses/trash?user_id=${user_id}`);
       if (response.ok) {
         const data = await response.json();
         const formattedData = data.map((tx) => ({
@@ -202,7 +202,7 @@ function TransactionsView({ email, user_id }) {
       const finalCategory = category === "Other" ? cleanAndFormatCategory(customCategory) : category;
 
       if (editingId) {
-        const response = await fetch(`http://localhost:5001/api/expenses/${editingId}`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/expenses/${editingId}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -235,7 +235,7 @@ function TransactionsView({ email, user_id }) {
           alert("Failed to update expense in the database.");
         }
       } else {
-        const response = await fetch("http://localhost:5001/api/expenses", {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/expenses`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -303,7 +303,7 @@ function TransactionsView({ email, user_id }) {
       "Are you sure you want to move this expense to the trash bin? You can restore it later.",
       async () => {
         try {
-          const response = await fetch(`http://localhost:5001/api/expenses/${id}`, {
+          const response = await fetch(`${import.meta.env.VITE_API_URL}/api/expenses/${id}`, {
             method: "DELETE",
           });
           if (response.ok) {
@@ -330,7 +330,7 @@ function TransactionsView({ email, user_id }) {
       "This transaction will be recovered back into your active logs.",
       async () => {
         try {
-          const response = await fetch(`http://localhost:5001/api/expenses/restore/${id}`, {
+          const response = await fetch(`${import.meta.env.VITE_API_URL}/api/expenses/restore/${id}`, {
             method: "POST",
           });
           if (response.ok) {
@@ -353,7 +353,7 @@ function TransactionsView({ email, user_id }) {
       "Warning: This action cannot be undone. This expense will be permanently deleted from the database.",
       async () => {
         try {
-          const response = await fetch(`http://localhost:5001/api/expenses/purge/${id}`, {
+          const response = await fetch(`${import.meta.env.VITE_API_URL}/api/expenses/purge/${id}`, {
             method: "DELETE",
           });
           if (response.ok) {
@@ -375,7 +375,7 @@ function TransactionsView({ email, user_id }) {
       "Warning: This will permanently delete all trashed expenses. This action cannot be undone.",
       async () => {
         try {
-          const response = await fetch(`http://localhost:5001/api/expenses/trash/clear?user_id=${user_id}`, {
+          const response = await fetch(`${import.meta.env.VITE_API_URL}/api/expenses/trash/clear?user_id=${user_id}`, {
             method: "DELETE",
           });
           if (response.ok) {

@@ -34,7 +34,7 @@ function App() {
       const accessToken = tokenResponse.access_token;
 
       try {
-        const response = await fetch("http://localhost:5001/api/auth/google", {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/google`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -74,7 +74,7 @@ function App() {
     setLoginError("");
 
     try {
-      const response = await fetch("http://localhost:5001/api/auth/password", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/password`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -139,7 +139,7 @@ function App() {
 
   useEffect(() => {
     if (isLoggedIn && email) {
-      fetch(`http://localhost:5001/api/auth/status?email=${encodeURIComponent(email)}`)
+      fetch(`${import.meta.env.VITE_API_URL}/api/auth/status?email=${encodeURIComponent(email)}`)
         .then((res) => res.json())
         .then((data) => {
           if (data) {
