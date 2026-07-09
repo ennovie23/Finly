@@ -293,7 +293,7 @@ function Dashboard({
             style={{ display: "flex", flexDirection: "column", gap: "10px" }}
           >
             <button
-              onClick={() => setActiveTab("dashboard")}
+              onClick={() => { setActiveTab("dashboard"); if (isMobile) setMobileSidebarOpen(false); }}
               title={isCollapsed ? "Dashboard" : undefined}
               style={{
                 display: "flex",
@@ -335,7 +335,7 @@ function Dashboard({
             </button>
 
             <button
-              onClick={() => setActiveTab("transactions")}
+              onClick={() => { setActiveTab("transactions"); if (isMobile) setMobileSidebarOpen(false); }}
               title={isCollapsed ? "Transactions" : undefined}
               style={{
                 display: "flex",
@@ -376,7 +376,7 @@ function Dashboard({
             </button>
 
             <button
-              onClick={() => setActiveTab("assistant")}
+              onClick={() => { setActiveTab("assistant"); if (isMobile) setMobileSidebarOpen(false); }}
               title={isCollapsed ? "AI Assistant" : undefined}
               style={{
                 display: "flex",
@@ -407,7 +407,7 @@ function Dashboard({
             </button>
 
             <button
-              onClick={() => setActiveTab("photos")}
+              onClick={() => { setActiveTab("photos"); if (isMobile) setMobileSidebarOpen(false); }}
               title={isCollapsed ? "Photos" : undefined}
               style={{
                 display: "flex",
@@ -448,7 +448,7 @@ function Dashboard({
             </button>
 
             <button
-              onClick={() => setActiveTab("wallet")}
+              onClick={() => { setActiveTab("wallet"); if (isMobile) setMobileSidebarOpen(false); }}
               title={isCollapsed ? "Wallet" : undefined}
               style={{
                 display: "flex",
@@ -480,7 +480,7 @@ function Dashboard({
             </button>
 
             <button
-              onClick={() => setShowAiSettings(true)}
+              onClick={() => { setActiveTab("ai-settings"); if (isMobile) setMobileSidebarOpen(false); }}
               title={isCollapsed ? "AI Settings" : undefined}
               style={{
                 display: "flex",
@@ -488,8 +488,11 @@ function Dashboard({
                 justifyContent: isCollapsed ? "center" : "flex-start",
                 gap: isCollapsed ? "0" : "14px",
                 padding: "12px 16px",
-                backgroundColor: "transparent",
-                color: "#718096",
+                backgroundColor:
+                  activeTab === "ai-settings"
+                    ? "rgba(0, 216, 246, 0.08)"
+                    : "transparent",
+                color: activeTab === "ai-settings" ? "#00d8f6" : "#718096",
                 border: "none",
                 borderRadius: "10px",
                 fontSize: "15px",
@@ -824,7 +827,7 @@ function Dashboard({
             transition: "background-color 0.3s ease",
           }}
         >
-          <div style={{ padding: isMobile ? "24px 20px" : "50px 60px" }}>
+          <div style={{ padding: isMobile && (activeTab === "assistant" || activeTab === "photos") ? "0" : isMobile ? "24px 20px" : "50px 60px", height: "100%", boxSizing: "border-box" }}>
             {activeTab === "dashboard" ? (
               <DashboardView email={email} user_id={userId} />
             ) : activeTab === "wallet" ? (
@@ -835,45 +838,54 @@ function Dashboard({
               <AIAssistantView />
             ) : activeTab === "photos" ? (
               <PhotosView user_id={userId} />
+            ) : activeTab === "ai-settings" ? (
+              <div>
+                {/* Header section matching Log Expenses */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: isMobile ? "24px" : "40px" }}>
+                  <div>
+                    <h1 style={{ fontSize: isMobile ? "28px" : "32px", fontWeight: "800", color: "var(--text-primary)", margin: 0, letterSpacing: "-0.5px" }}>
+                      AI Settings
+                    </h1>
+                    <p style={{ color: "var(--text-secondary)", fontSize: isMobile ? "14px" : "16px", marginTop: "8px" }}>
+                      Bring Your Own Key (BYOK) to avoid free-tier quotas and access unlimited models.
+                    </p>
+                  </div>
+                </div>
+
+                <div style={{ maxWidth: "600px" }}>
+                  <div style={{ backgroundColor: isMobile ? "transparent" : "var(--bg-card)", padding: isMobile ? "0" : "32px", borderRadius: isMobile ? "0" : "16px", border: isMobile ? "none" : "1px solid var(--border-color)", boxShadow: isMobile ? "none" : "0 4px 6px rgba(0,0,0,0.05)" }}>
+                  
+                  <form onSubmit={saveAiSettings} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                    <div>
+                      <label style={{ display: "block", fontSize: "14px", fontWeight: "600", marginBottom: "8px", color: "var(--text-secondary)" }}>AI Provider</label>
+                      <select value={aiProvider} onChange={(e) => setAiProvider(e.target.value)} style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid var(--border-color)", backgroundColor: "var(--bg-app)", color: "var(--text-primary)", fontSize: "15px", outline: "none" }}>
+                        <option value="gemini">Google Gemini (Native)</option>
+                        <option value="openrouter">OpenRouter (Universal)</option>
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label style={{ display: "block", fontSize: "14px", fontWeight: "600", marginBottom: "8px", color: "var(--text-secondary)" }}>Custom API Key</label>
+                      <input type="password" value={aiKey} onChange={(e) => setAiKey(e.target.value)} placeholder="Leave blank to use default server key" style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid var(--border-color)", backgroundColor: "var(--bg-app)", color: "var(--text-primary)", fontSize: "15px", outline: "none" }} />
+                    </div>
+                    
+                    <div>
+                      <label style={{ display: "block", fontSize: "14px", fontWeight: "600", marginBottom: "8px", color: "var(--text-secondary)" }}>Model ID</label>
+                      <input type="text" value={aiModel} onChange={(e) => setAiModel(e.target.value)} placeholder="e.g., google/gemini-2.5-flash" style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid var(--border-color)", backgroundColor: "var(--bg-app)", color: "var(--text-primary)", fontSize: "15px", outline: "none" }} />
+                      <p style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "8px" }}>Note: To scan images, you MUST use a Vision-capable model (like gemini-2.5-flash or gpt-4o).</p>
+                    </div>
+
+                    <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "12px" }}>
+                      <button type="submit" style={{ padding: "12px 24px", backgroundColor: "#00d8f6", border: "none", borderRadius: "10px", color: "#fff", fontWeight: "600", cursor: "pointer", transition: "opacity 0.2s" }}>Save Settings</button>
+                    </div>
+                  </form>
+                </div>
+               </div>
+              </div>
             ) : null}
           </div>
         </div>
       </div>
-
-      {showAiSettings && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000, padding: "20px" }}>
-          <div style={{ backgroundColor: "var(--bg-card)", padding: "32px", borderRadius: "16px", width: "100%", maxWidth: "500px", border: "1px solid var(--border-color)", boxShadow: "0 10px 25px rgba(0,0,0,0.1)" }}>
-            <h2 style={{ fontSize: "20px", fontWeight: "700", marginBottom: "8px" }}>AI Settings</h2>
-            <p style={{ color: "var(--text-secondary)", fontSize: "14px", marginBottom: "24px" }}>Bring Your Own Key (BYOK) to avoid free-tier quotas and access unlimited models.</p>
-            
-            <form onSubmit={saveAiSettings} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-              <div>
-                <label style={{ display: "block", fontSize: "14px", fontWeight: "600", marginBottom: "8px", color: "var(--text-secondary)" }}>AI Provider</label>
-                <select value={aiProvider} onChange={(e) => setAiProvider(e.target.value)} style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid var(--border-color)", backgroundColor: "var(--bg-app)", color: "var(--text-primary)", fontSize: "15px", outline: "none" }}>
-                  <option value="gemini">Google Gemini (Native)</option>
-                  <option value="openrouter">OpenRouter (Universal)</option>
-                </select>
-              </div>
-              
-              <div>
-                <label style={{ display: "block", fontSize: "14px", fontWeight: "600", marginBottom: "8px", color: "var(--text-secondary)" }}>Custom API Key</label>
-                <input type="password" value={aiKey} onChange={(e) => setAiKey(e.target.value)} placeholder="Leave blank to use default server key" style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid var(--border-color)", backgroundColor: "var(--bg-app)", color: "var(--text-primary)", fontSize: "15px", outline: "none" }} />
-              </div>
-              
-              <div>
-                <label style={{ display: "block", fontSize: "14px", fontWeight: "600", marginBottom: "8px", color: "var(--text-secondary)" }}>Model ID</label>
-                <input type="text" value={aiModel} onChange={(e) => setAiModel(e.target.value)} placeholder="e.g., google/gemini-2.5-flash" style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid var(--border-color)", backgroundColor: "var(--bg-app)", color: "var(--text-primary)", fontSize: "15px", outline: "none" }} />
-                <p style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "8px" }}>Note: To scan images, you MUST use a Vision-capable model (like gemini-2.5-flash or gpt-4o).</p>
-              </div>
-
-              <div style={{ display: "flex", gap: "12px", marginTop: "12px" }}>
-                <button type="button" onClick={() => setShowAiSettings(false)} style={{ flex: 1, padding: "12px", backgroundColor: "var(--bg-app)", border: "1px solid var(--border-color)", borderRadius: "10px", color: "var(--text-primary)", fontWeight: "600", cursor: "pointer" }}>Cancel</button>
-                <button type="submit" style={{ flex: 1, padding: "12px", backgroundColor: "#00d8f6", border: "none", borderRadius: "10px", color: "#fff", fontWeight: "600", cursor: "pointer" }}>Save Settings</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

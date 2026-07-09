@@ -15,11 +15,13 @@ const authRoutes = require('./routes/auth.routes');
 const txRoutes = require('./routes/tx.routes');
 const scannerRoutes = require('./routes/scanner.routes');
 const settingsRoutes = require('./routes/settings.routes');
+const chatRoutes = require('./routes/chat.routes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/expenses', txRoutes);
 app.use('/api/scanner', scannerRoutes);
 app.use('/api/user-settings', settingsRoutes);
+app.use('/api/chat', chatRoutes);
 
 // Test Endpoint
 app.get('/api/test-db', async (req, res) => {

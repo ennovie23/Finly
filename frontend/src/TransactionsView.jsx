@@ -752,7 +752,7 @@ function TransactionsView({ email, user_id }) {
         style={{ display: "none" }} 
       />
       {/* Header section */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: isMobile ? "24px" : "40px" }}>
+      <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", justifyContent: "space-between", alignItems: isMobile ? "flex-start" : "flex-end", gap: isMobile ? "16px" : "0", marginBottom: isMobile ? "24px" : "40px" }}>
         <div>
           <h1 style={{ fontSize: isMobile ? "28px" : "32px", fontWeight: "800", color: "var(--text-primary)", margin: 0, letterSpacing: "-0.5px" }}>
             {viewTrash ? "Trash Bin" : "Log Expenses"}
@@ -763,11 +763,13 @@ function TransactionsView({ email, user_id }) {
         </div>
 
         {/* Page Level Trash & Clear Buttons */}
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", width: isMobile ? "100%" : "auto", alignSelf: "flex-end" }}>
           {viewTrash && transactions.length > 0 && (
             <button
               onClick={handleClearTrashClick}
               style={{
+                flex: isMobile ? 1 : "none",
+                justifyContent: "center",
                 backgroundColor: "rgba(255, 82, 82, 0.1)",
                 border: "1px solid rgba(255, 82, 82, 0.2)",
                 color: "#FF5252",
@@ -788,48 +790,41 @@ function TransactionsView({ email, user_id }) {
               Empty Trash
             </button>
           )}
+          
+          {viewTrash && (
+            <button
+              onClick={() => setViewTrash(false)}
+              style={{
+                flex: isMobile ? 1 : "none",
+                justifyContent: "center",
+                backgroundColor: "rgba(0, 216, 246, 0.1)",
+                border: "1px solid rgba(0, 216, 246, 0.2)",
+                color: "#00d8f6",
+                padding: "10px 18px",
+                borderRadius: "10px",
+                fontSize: "14px",
+                fontWeight: "600",
+                cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                transition: "all 0.2s ease",
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12" />
+                <polyline points="12 19 5 12 12 5" />
+              </svg>
+              Back to Log
+            </button>
+          )}
 
-          <button
-            onClick={() => setViewTrash(!viewTrash)}
-            style={{
-              backgroundColor: viewTrash ? "rgba(0, 216, 246, 0.1)" : "rgba(113, 128, 150, 0.1)",
-              border: `1px solid ${viewTrash ? "rgba(0, 216, 246, 0.2)" : "rgba(113, 128, 150, 0.2)"}`,
-              color: viewTrash ? "#00d8f6" : "var(--text-secondary)",
-              padding: "10px 18px",
-              borderRadius: "10px",
-              fontSize: "14px",
-              fontWeight: "600",
-              cursor: "pointer",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "8px",
-              transition: "all 0.2s ease",
-            }}
-          >
-            {viewTrash ? (
-              <>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="19" y1="12" x2="5" y2="12" />
-                  <polyline points="12 19 5 12 12 5" />
-                </svg>
-                Back to Log
-              </>
-            ) : (
-              <>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="3 6 5 6 21 6" />
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                </svg>
-                Trash Bin
-              </>
-            )}
-          </button>
         </div>
       </div>
 
       {/* AI & Voice Action Buttons */}
       {!isMobile && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", marginBottom: "32px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", marginBottom: "32px", opacity: viewTrash ? 0.5 : 1, pointerEvents: viewTrash ? "none" : "auto" }}>
           <div style={{ position: "relative" }}>
             <button 
               onClick={(e) => { e.stopPropagation(); document.getElementById("scanner-input-gallery").click(); }}
@@ -899,7 +894,7 @@ function TransactionsView({ email, user_id }) {
       )}
 
       {/* Floating Action Buttons for Mobile */}
-      {isMobile && (
+      {isMobile && !viewTrash && (
         <div style={{
           position: "fixed",
           bottom: `${fabPos.bottom}px`,
@@ -1013,7 +1008,7 @@ function TransactionsView({ email, user_id }) {
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 2fr", gap: "32px", alignItems: "start" }}>
         
         {/* Left Column: New Transaction Form */}
-        <div style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: "16px", padding: isMobile ? "20px" : "28px", textAlign: "left", opacity: viewTrash ? 0.5 : 1, pointerEvents: viewTrash ? "none" : "auto" }}>
+        <div style={{ display: (isMobile && viewTrash) ? "none" : "block", backgroundColor: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: "16px", padding: isMobile ? "20px" : "28px", textAlign: "left", opacity: viewTrash ? 0.5 : 1, pointerEvents: viewTrash ? "none" : "auto" }}>
           <h2 style={{ fontSize: "18px", fontWeight: "700", color: "var(--text-primary)", margin: "0 0 24px 0" }}>
             {editingId ? "Edit Transaction" : "Manual Entry"}
           </h2>
@@ -1244,9 +1239,34 @@ function TransactionsView({ email, user_id }) {
         {/* Right Column: Transactions List */}
         <div style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: "16px", padding: isMobile ? "20px" : "28px", overflow: "hidden", display: "flex", flexDirection: "column" }}>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "16px", marginBottom: "24px" }}>
-            <h2 style={{ fontSize: "18px", fontWeight: "700", color: "var(--text-primary)", margin: 0 }}>
-              {viewTrash ? "Deleted Transactions" : "Recent Transactions"}
-            </h2>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+              <h2 style={{ fontSize: "18px", fontWeight: "700", color: "var(--text-primary)", margin: 0 }}>
+                {viewTrash ? "Deleted Transactions" : "Recent Transactions"}
+              </h2>
+              {!viewTrash && (
+                <button
+                  onClick={() => setViewTrash(true)}
+                  title="Trash Bin"
+                  style={{
+                    backgroundColor: "rgba(113, 128, 150, 0.1)",
+                    border: "1px solid rgba(113, 128, 150, 0.2)",
+                    color: "var(--text-secondary)",
+                    padding: "8px",
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    transition: "all 0.2s ease",
+                  }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                  </svg>
+                </button>
+              )}
+            </div>
             
             {/* Filter controls */}
             <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
@@ -1971,7 +1991,7 @@ function TransactionsView({ email, user_id }) {
           </div>
           <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", maxWidth: (!receiptPreview.receipt_url && !isMobile) ? "400px" : "900px", width: "90%", maxHeight: "90vh", backgroundColor: "var(--bg-card)", borderRadius: "16px", overflow: "hidden", margin: "auto" }}>
             {receiptPreview.receipt_url && (
-              <div style={{ flex: 1, backgroundColor: "#000", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+              <div style={{ flex: 1, backgroundColor: "#000", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", padding: "24px", maxHeight: isMobile ? "50vh" : "none" }}>
                 <img src={receiptPreview.receipt_url.startsWith('http') ? receiptPreview.receipt_url : `${import.meta.env.VITE_API_URL}${receiptPreview.receipt_url}`} alt="Receipt" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
               </div>
             )}

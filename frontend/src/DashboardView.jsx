@@ -520,26 +520,61 @@ function DashboardView({ email, user_id }) {
 
       {/* Anomalies Dedicated Grid Row */}
       {analyticsData.detected_anomalies && analyticsData.detected_anomalies.length > 0 && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "24px", marginTop: "24px" }}>
-          <div style={{ backgroundColor: "var(--bg-card)", border: "1px solid rgba(255, 152, 0, 0.3)", borderRadius: "16px", padding: "28px", display: "flex", alignItems: "flex-start", gap: "20px", textAlign: "left" }}>
-            <div style={{ backgroundColor: "rgba(255, 152, 0, 0.1)", color: "#FF9800", width: "48px", height: "48px", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontWeight: "bold", fontSize: "24px" }}>
-              !
-            </div>
-            <div>
-              <h2 style={{ margin: "0 0 10px 0", fontSize: "18px", color: "#FF9800", fontWeight: "700" }}>Unusual Spikes Flagged</h2>
-              <p style={{ margin: "0 0 16px 0", fontSize: "14px", color: "var(--text-secondary)", lineHeight: "1.5" }}>
+        <div style={{ marginTop: "24px" }}>
+          {/* Single unified container — same style as transactions list */}
+          <div style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: "16px", padding: isMobile ? "20px" : "28px", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+            
+            {/* Header — same layout as transactions header */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "4px", marginBottom: "20px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <div style={{ backgroundColor: "rgba(255, 152, 0, 0.1)", color: "#FF9800", width: "28px", height: "28px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontWeight: "bold", fontSize: "16px" }}>!</div>
+                <h2 style={{ fontSize: "18px", fontWeight: "700", color: "#FF9800", margin: 0 }}>Unusual Spikes Flagged</h2>
+              </div>
+              <p style={{ margin: "4px 0 0 0", fontSize: "13px", color: "var(--text-secondary)", lineHeight: "1.4" }}>
                 We detected <strong>{analyticsData.detected_anomalies.length}</strong> unusually high transaction{analyticsData.detected_anomalies.length > 1 ? 's' : ''} based on your typical spending patterns.
               </p>
-              
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}>
-                {analyticsData.detected_anomalies.map((anomaly, idx) => (
-                  <div key={idx} style={{ backgroundColor: "var(--bg-app)", border: "1px solid var(--border-color)", borderRadius: "8px", padding: "12px 16px", display: "flex", flexDirection: "column", gap: "4px" }}>
-                    <span style={{ fontSize: "12px", color: "var(--text-secondary)", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.5px" }}>{anomaly.category}</span>
-                    <span style={{ fontSize: "16px", color: "var(--text-primary)", fontWeight: "bold" }}>{formatCurrencySimple(anomaly.amount)}</span>
-                    <span style={{ fontSize: "12px", color: "var(--text-secondary)" }}>{anomaly.date}</span>
+            </div>
+
+            {/* Scrollable anomaly rows — same card style as mobile transaction rows */}
+            <div style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "12px",
+              maxHeight: isMobile ? "calc(3 * 80px)" : "calc(5 * 80px)",
+              overflowY: "auto",
+            }}>
+              {analyticsData.detected_anomalies.map((anomaly, idx) => {
+                const catColors = (() => {
+                  switch (anomaly.category) {
+                    case "Food": return { color: "#00d8f6", bg: "rgba(0, 216, 246, 0.1)", dot: "#00d8f6" };
+                    case "Transport": return { color: "#FF007A", bg: "rgba(255, 0, 122, 0.1)", dot: "#FF007A" };
+                    case "Utilities": return { color: "#9F7AEA", bg: "rgba(121, 40, 202, 0.1)", dot: "#9F7AEA" };
+                    case "Entertainment": return { color: "#00E676", bg: "rgba(0, 230, 118, 0.1)", dot: "#00E676" };
+                    case "Savings": return { color: "#FFD700", bg: "rgba(255, 215, 0, 0.1)", dot: "#FFD700" };
+                    default: {
+                      let hash = 0;
+                      for (let i = 0; i < anomaly.category.length; i++) hash = anomaly.category.charCodeAt(i) + ((hash << 5) - hash);
+                      const hue = Math.abs(hash % 360);
+                      const c = `hsl(${hue}, 85%, 60%)`;
+                      return { color: c, bg: `hsla(${hue}, 85%, 60%, 0.12)`, dot: c };
+                    }
+                  }
+                })();
+                return (
+                  <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px", borderRadius: "12px", backgroundColor: "rgba(255, 255, 255, 0.02)", border: "1px solid var(--border-color)" }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                      <span style={{ fontSize: "13px", color: "var(--text-secondary)" }}>{anomaly.date}</span>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", backgroundColor: catColors.bg, color: catColors.color, padding: "4px 10px", borderRadius: "12px", fontSize: "12px", fontWeight: "bold", width: "fit-content" }}>
+                        <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: catColors.dot }}></span>
+                        {anomaly.category}
+                      </span>
+                    </div>
+                    <span style={{ fontSize: "16px", fontWeight: "bold", color: "var(--text-primary)", letterSpacing: "0.5px" }}>
+                      {formatCurrencySimple(anomaly.amount)}
+                    </span>
                   </div>
-                ))}
-              </div>
+                );
+              })}
             </div>
           </div>
         </div>
