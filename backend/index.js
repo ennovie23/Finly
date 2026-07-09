@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const cors = require('cors');
 const pool = require('./config/db');
 
@@ -7,13 +8,18 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
 const authRoutes = require('./routes/auth.routes');
 const txRoutes = require('./routes/tx.routes');
+const scannerRoutes = require('./routes/scanner.routes');
+const settingsRoutes = require('./routes/settings.routes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/expenses', txRoutes);
+app.use('/api/scanner', scannerRoutes);
+app.use('/api/user-settings', settingsRoutes);
 
 // Test Endpoint
 app.get('/api/test-db', async (req, res) => {

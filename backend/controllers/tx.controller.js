@@ -1,19 +1,73 @@
 const pool = require('../config/db');
 const { spawn } = require('child_process');
 const path = require('path');
+const fs = require('fs');
+const cloudinary = require('cloudinary').v2;
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+const deleteImageFile = async (receipt_url) => {
+  if (!receipt_url) return;
+  try {
+    if (receipt_url.includes('cloudinary.com')) {
+      const parts = receipt_url.split('/');
+      const filenameWithExt = parts[parts.length - 1];
+      const folder = parts[parts.length - 2];
+      const publicId = `${folder}/${filenameWithExt.split('.')[0]}`;
+      await cloudinary.uploader.destroy(publicId);
+    } else if (receipt_url.startsWith('/uploads/')) {
+      const filename = receipt_url.replace('/uploads/', '');
+      const filepath = path.join(__dirname, '../uploads', filename);
+      if (fs.existsSync(filepath)) {
+        fs.unlinkSync(filepath);
+      }
+    }
+  } catch (err) {
+    console.error('Failed to delete image file:', err);
+  }
+};
+
+const streamifier = require('streamifier');
 
 // Save a new expense to the database
 exports.addExpense = async (req, res) => {
   try {
-    const { amount, category, description, date, user_id } = req.body;
+    const { amount, category, description, date, user_id, receipt_url, merchant } = req.body;
+    
+    let finalReceiptUrl = receipt_url || '';
+    
+    // If a file was uploaded, save it to Cloudinary or local fs first
+    if (req.file) {
+      if (process.env.NODE_ENV === 'production') {
+        finalReceiptUrl = await new Promise((resolve, reject) => {
+          const uploadStream = cloudinary.uploader.upload_stream(
+            { folder: 'spendsight_uploads' },
+            (error, result) => {
+              if (error) reject(error);
+              else resolve(result.secure_url);
+            }
+          );
+          streamifier.createReadStream(req.file.buffer).pipe(uploadStream);
+        });
+      } else {
+        const filename = `${Date.now()}-${req.file.originalname.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+        const filepath = path.join(__dirname, '../uploads', filename);
+        fs.writeFileSync(filepath, req.file.buffer);
+        finalReceiptUrl = `/uploads/${filename}`;
+      }
+    }
     
     const queryText = `
-      INSERT INTO expenses (amount, category, description, date, user_id) 
-      VALUES ($1, $2, $3, $4, $5) 
+      INSERT INTO expenses (amount, category, description, date, user_id, receipt_url, merchant) 
+      VALUES ($1, $2, $3, $4, $5, $6, $7) 
       RETURNING *;
     `;
     
-    const values = [amount, category, description, date, user_id];
+    const values = [amount, category, description, date, user_id, finalReceiptUrl, merchant];
     const result = await pool.query(queryText, values);
     
     res.status(201).json(result.rows[0]);
@@ -81,6 +135,13 @@ exports.restoreExpense = async (req, res) => {
 exports.purgeExpense = async (req, res) => {
   try {
     const { id } = req.params;
+    
+    // Fetch to see if there's an image
+    const result = await pool.query('SELECT receipt_url FROM expenses WHERE id = $1', [id]);
+    if (result.rows.length > 0) {
+      await deleteImageFile(result.rows[0].receipt_url);
+    }
+
     await pool.query('DELETE FROM expenses WHERE id = $1', [id]);
     res.status(200).json({ message: 'Expense permanently deleted' });
   } catch (err) {
@@ -93,6 +154,13 @@ exports.purgeExpense = async (req, res) => {
 exports.clearTrash = async (req, res) => {
   try {
     const { user_id } = req.query;
+    
+    // Fetch all trashed expenses to delete their images
+    const result = await pool.query('SELECT receipt_url FROM expenses WHERE user_id = $1 AND deleted_at IS NOT NULL', [user_id]);
+    for (const row of result.rows) {
+      await deleteImageFile(row.receipt_url);
+    }
+
     await pool.query('DELETE FROM expenses WHERE user_id = $1 AND deleted_at IS NOT NULL', [user_id]);
     res.status(200).json({ message: 'Trash cleared successfully' });
   } catch (err) {
@@ -105,16 +173,16 @@ exports.clearTrash = async (req, res) => {
 exports.updateExpense = async (req, res) => {
   try {
     const { id } = req.params;
-    const { amount, category, description, date } = req.body;
+    const { amount, category, description, date, receipt_url, merchant } = req.body;
     
     const queryText = `
       UPDATE expenses 
-      SET amount = $1, category = $2, description = $3, date = $4 
-      WHERE id = $5 
+      SET amount = $1, category = $2, description = $3, date = $4, receipt_url = $5, merchant = $6
+      WHERE id = $7 
       RETURNING *;
     `;
     
-    const result = await pool.query(queryText, [amount, category, description, date, id]);
+    const result = await pool.query(queryText, [amount, category, description, date, receipt_url, merchant, id]);
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Expense not found' });
     }

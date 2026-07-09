@@ -1,8 +1,12 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
 const txController = require('../controllers/tx.controller');
 
-router.post('/', txController.addExpense);
+// Use memory storage for the uploaded image so we can stream it to Cloudinary or write to local
+const upload = multer({ storage: multer.memoryStorage() });
+
+router.post('/', upload.single('image'), txController.addExpense);
 router.get('/', txController.getExpenses);
 router.put('/:id', txController.updateExpense);
 router.delete('/:id', txController.deleteExpense);

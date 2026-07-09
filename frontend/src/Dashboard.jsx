@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import DashboardView from "./DashboardView";
 import TransactionsView from "./TransactionsView";
 import AIAssistantView from "./AIAssistantView";
+import PhotosView from "./PhotosView";
 import WalletView from "./WalletView";
 import PasswordView from "./PasswordView";
 
@@ -22,6 +23,58 @@ function Dashboard({
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  
+  const [showAiSettings, setShowAiSettings] = useState(false);
+  const [aiProvider, setAiProvider] = useState(() => localStorage.getItem("spendsight_aiProvider") || "gemini");
+  const [aiKey, setAiKey] = useState(() => localStorage.getItem("spendsight_aiKey") || "");
+  const [aiModel, setAiModel] = useState(() => localStorage.getItem("spendsight_aiModel") || "gemini-2.5-flash");
+
+  const saveAiSettings = async (e) => {
+    e.preventDefault();
+    localStorage.setItem("spendsight_aiProvider", aiProvider);
+    localStorage.setItem("spendsight_aiKey", aiKey);
+    localStorage.setItem("spendsight_aiModel", aiModel);
+    setShowAiSettings(false);
+
+    if (userId) {
+      try {
+        await fetch(`${import.meta.env.VITE_API_URL}/api/user-settings/ai`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_id: userId,
+            ai_provider: aiProvider,
+            ai_model: aiModel
+          })
+        });
+      } catch (err) {
+        console.error("Failed to save AI settings to database", err);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (!userId) return;
+    const fetchAiSettings = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/user-settings/ai?user_id=${userId}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.ai_provider) {
+            setAiProvider(data.ai_provider);
+            localStorage.setItem("spendsight_aiProvider", data.ai_provider);
+          }
+          if (data.ai_model) {
+            setAiModel(data.ai_model);
+            localStorage.setItem("spendsight_aiModel", data.ai_model);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch AI settings", err);
+      }
+    };
+    fetchAiSettings();
+  }, [userId]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -354,6 +407,47 @@ function Dashboard({
             </button>
 
             <button
+              onClick={() => setActiveTab("photos")}
+              title={isCollapsed ? "Photos" : undefined}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: isCollapsed ? "center" : "flex-start",
+                gap: isCollapsed ? "0" : "14px",
+                padding: "12px 16px",
+                backgroundColor:
+                  activeTab === "photos"
+                    ? "rgba(0, 216, 246, 0.08)"
+                    : "transparent",
+                color: activeTab === "photos" ? "#00d8f6" : "#718096",
+                border: "none",
+                borderRadius: "10px",
+                fontSize: "15px",
+                fontWeight: "600",
+                cursor: "pointer",
+                textAlign: "left",
+                transition: "all 0.2s ease-in-out",
+                width: "100%",
+              }}
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
+                <circle cx="9" cy="9" r="2"/>
+                <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+              </svg>
+              {!isCollapsed && "Photos"}
+            </button>
+
+            <button
               onClick={() => setActiveTab("wallet")}
               title={isCollapsed ? "Wallet" : undefined}
               style={{
@@ -383,6 +477,35 @@ function Dashboard({
                 <path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z"></path>
               </svg>
               {!isCollapsed && "Wallet"}
+            </button>
+
+            <button
+              onClick={() => setShowAiSettings(true)}
+              title={isCollapsed ? "AI Settings" : undefined}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: isCollapsed ? "center" : "flex-start",
+                gap: isCollapsed ? "0" : "14px",
+                padding: "12px 16px",
+                backgroundColor: "transparent",
+                color: "#718096",
+                border: "none",
+                borderRadius: "10px",
+                fontSize: "15px",
+                fontWeight: "600",
+                cursor: "pointer",
+                textAlign: "left",
+                transition: "all 0.2s ease-in-out",
+                width: "100%",
+                marginTop: "20px"
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              {!isCollapsed && "AI Settings"}
             </button>
           </div>
         </div>
@@ -710,10 +833,47 @@ function Dashboard({
               <TransactionsView email={email} user_id={userId} />
             ) : activeTab === "assistant" ? (
               <AIAssistantView />
+            ) : activeTab === "photos" ? (
+              <PhotosView user_id={userId} />
             ) : null}
           </div>
         </div>
       </div>
+
+      {showAiSettings && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000, padding: "20px" }}>
+          <div style={{ backgroundColor: "var(--bg-card)", padding: "32px", borderRadius: "16px", width: "100%", maxWidth: "500px", border: "1px solid var(--border-color)", boxShadow: "0 10px 25px rgba(0,0,0,0.1)" }}>
+            <h2 style={{ fontSize: "20px", fontWeight: "700", marginBottom: "8px" }}>AI Settings</h2>
+            <p style={{ color: "var(--text-secondary)", fontSize: "14px", marginBottom: "24px" }}>Bring Your Own Key (BYOK) to avoid free-tier quotas and access unlimited models.</p>
+            
+            <form onSubmit={saveAiSettings} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              <div>
+                <label style={{ display: "block", fontSize: "14px", fontWeight: "600", marginBottom: "8px", color: "var(--text-secondary)" }}>AI Provider</label>
+                <select value={aiProvider} onChange={(e) => setAiProvider(e.target.value)} style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid var(--border-color)", backgroundColor: "var(--bg-app)", color: "var(--text-primary)", fontSize: "15px", outline: "none" }}>
+                  <option value="gemini">Google Gemini (Native)</option>
+                  <option value="openrouter">OpenRouter (Universal)</option>
+                </select>
+              </div>
+              
+              <div>
+                <label style={{ display: "block", fontSize: "14px", fontWeight: "600", marginBottom: "8px", color: "var(--text-secondary)" }}>Custom API Key</label>
+                <input type="password" value={aiKey} onChange={(e) => setAiKey(e.target.value)} placeholder="Leave blank to use default server key" style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid var(--border-color)", backgroundColor: "var(--bg-app)", color: "var(--text-primary)", fontSize: "15px", outline: "none" }} />
+              </div>
+              
+              <div>
+                <label style={{ display: "block", fontSize: "14px", fontWeight: "600", marginBottom: "8px", color: "var(--text-secondary)" }}>Model ID</label>
+                <input type="text" value={aiModel} onChange={(e) => setAiModel(e.target.value)} placeholder="e.g., google/gemini-2.5-flash" style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid var(--border-color)", backgroundColor: "var(--bg-app)", color: "var(--text-primary)", fontSize: "15px", outline: "none" }} />
+                <p style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "8px" }}>Note: To scan images, you MUST use a Vision-capable model (like gemini-2.5-flash or gpt-4o).</p>
+              </div>
+
+              <div style={{ display: "flex", gap: "12px", marginTop: "12px" }}>
+                <button type="button" onClick={() => setShowAiSettings(false)} style={{ flex: 1, padding: "12px", backgroundColor: "var(--bg-app)", border: "1px solid var(--border-color)", borderRadius: "10px", color: "var(--text-primary)", fontWeight: "600", cursor: "pointer" }}>Cancel</button>
+                <button type="submit" style={{ flex: 1, padding: "12px", backgroundColor: "#00d8f6", border: "none", borderRadius: "10px", color: "#fff", fontWeight: "600", cursor: "pointer" }}>Save Settings</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
