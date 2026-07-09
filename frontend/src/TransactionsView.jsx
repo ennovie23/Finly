@@ -369,9 +369,15 @@ function TransactionsView({ email, user_id }) {
         setTransactions((prev) => [{ ...savedTx, date: formatDateString(savedTx.date), amount: parseFloat(savedTx.amount) }, ...prev]);
         setScanResult(null); // close modal
         setScanFile(null); // Clear file
+      } else {
+        const errorData = await response.json();
+        setModalConfig({ title: "Failed to Save", message: errorData.error || "Unknown server error occurred.", onConfirm: null });
+        setShowModal(true);
       }
     } catch (err) {
       console.error(err);
+      setModalConfig({ title: "Network Error", message: "Failed to connect to the server. Please check your internet connection.", onConfirm: null });
+      setShowModal(true);
     }
   };
 
