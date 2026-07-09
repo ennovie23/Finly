@@ -370,8 +370,15 @@ function TransactionsView({ email, user_id }) {
         setScanResult(null); // close modal
         setScanFile(null); // Clear file
       } else {
-        const errorData = await response.json();
-        setModalConfig({ title: "Failed to Save", message: errorData.error || "Unknown server error occurred.", onConfirm: null });
+        const contentType = response.headers.get("content-type");
+        let errorMessage = "Unknown server error occurred.";
+        if (contentType && contentType.includes("application/json")) {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } else {
+          errorMessage = await response.text();
+        }
+        setModalConfig({ title: "Failed to Save", message: errorMessage, onConfirm: null });
         setShowModal(true);
       }
     } catch (err) {
