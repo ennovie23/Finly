@@ -46,6 +46,7 @@ function TransactionsView({ email, user_id }) {
   const [showScannerOptions, setShowScannerOptions] = useState(false);
   const [scanResult, setScanResult] = useState(null);
   const [receiptPreview, setReceiptPreview] = useState(null);
+  const [photoFullscreen, setPhotoFullscreen] = useState(false);
   const [scanImagePreview, setScanImagePreview] = useState(null);
   const [scanFile, setScanFile] = useState(null);
   const [formReceiptUrl, setFormReceiptUrl] = useState("");
@@ -952,7 +953,7 @@ function TransactionsView({ email, user_id }) {
                   display: "flex", alignItems: "center", gap: "12px", backgroundColor: "var(--bg-card)", border: "1px solid var(--border-color)", padding: "12px 16px", borderRadius: "100px", boxShadow: "0 4px 12px rgba(0,0,0,0.15)", cursor: "pointer"
                 }}
               >
-                <span style={{ fontSize: "15px", fontWeight: "600", color: "var(--text-primary)" }}>Upload Receipt</span>
+                <span style={{ fontSize: "15px", fontWeight: "600", color: "var(--text-primary)" }}>Upload</span>
                 <div style={{ width: "36px", height: "36px", borderRadius: "50%", backgroundColor: "rgba(0, 216, 246, 0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00d8f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -2003,11 +2004,10 @@ function TransactionsView({ email, user_id }) {
         </div>
       )}
 
-
       {receiptPreview && (
         <div style={{
           position: "fixed",
-          top: 0,
+          top: isMobile ? "57px" : 0,
           left: 0,
           right: 0,
           bottom: 0,
@@ -2018,48 +2018,94 @@ function TransactionsView({ email, user_id }) {
           zIndex: 2000,
           backdropFilter: "blur(4px)",
         }}>
-          <div style={{ position: "absolute", top: "24px", right: "24px" }}>
-            <button onClick={() => setReceiptPreview(null)} style={{ background: "transparent", border: "none", color: "#fff", cursor: "pointer", padding: "8px" }}>
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <div style={{ 
+            display: "flex", 
+            flexDirection: isMobile ? "column" : "row", 
+            maxWidth: isMobile ? "300px" : "900px", 
+            width: "90%", 
+            maxHeight: isMobile ? "70vh" : "90vh", 
+            backgroundColor: "var(--bg-card)", 
+            borderRadius: "16px", 
+            overflow: "hidden",
+            position: "relative",
+            boxShadow: "0 24px 48px rgba(0,0,0,0.5)"
+          }}>
+            <button onClick={() => { setReceiptPreview(null); setPhotoFullscreen(false); }} style={{ position: "absolute", top: "10px", right: "10px", background: "rgba(0,0,0,0.6)", borderRadius: "50%", border: "none", color: "#fff", cursor: "pointer", padding: "6px", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10 }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
-          </div>
-          <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", maxWidth: (!receiptPreview.receipt_url && !isMobile) ? "400px" : "900px", width: "90%", maxHeight: "90vh", backgroundColor: "var(--bg-card)", borderRadius: "16px", overflow: "hidden", margin: "auto" }}>
-            {receiptPreview.receipt_url && (
-              <div style={{ flex: 1, backgroundColor: "#000", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", padding: "24px", maxHeight: isMobile ? "50vh" : "none" }}>
-                <img src={receiptPreview.receipt_url.startsWith('http') ? receiptPreview.receipt_url : `${import.meta.env.VITE_API_URL}${receiptPreview.receipt_url}`} alt="Receipt" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
+            
+            <div 
+              style={{ flex: 1, backgroundColor: "#000", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", maxHeight: isMobile ? "25vh" : "none", minHeight: isMobile ? "120px" : "auto", cursor: (isMobile && receiptPreview.receipt_url) ? "zoom-in" : "default" }}
+              onClick={() => { if (isMobile && receiptPreview.receipt_url) setPhotoFullscreen(true); }}
+            >
+              {receiptPreview.receipt_url ? (
+                <img src={receiptPreview.receipt_url.startsWith('http') ? receiptPreview.receipt_url : `${import.meta.env.VITE_API_URL}${receiptPreview.receipt_url}`} alt="Receipt" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain", padding: isMobile ? "8px" : "0" }} />
+              ) : (
+                <div style={{ color: "var(--text-secondary)", fontSize: "14px" }}>No receipt image</div>
+              )}
+            </div>
+            
+            <div style={{ width: isMobile ? "100%" : "350px", padding: isMobile ? "16px" : "32px", display: "flex", flexDirection: "column", gap: isMobile ? "12px" : "24px", overflowY: "auto" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <h3 style={{ margin: 0, color: "var(--text-primary)", fontSize: isMobile ? "16px" : "20px" }}>Transaction Details</h3>
               </div>
-            )}
-            <div style={{ width: (isMobile || !receiptPreview.receipt_url) ? "100%" : "350px", padding: "32px", display: "flex", flexDirection: "column", gap: "24px", overflowY: "auto" }}>
-              <h3 style={{ margin: 0, color: "var(--text-primary)", fontSize: "20px" }}>Transaction Details</h3>
-              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                <div>
-                  <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginBottom: "4px" }}>MERCHANT</div>
-                  <div style={{ fontSize: "16px", color: "var(--text-primary)", fontWeight: "500" }}>{receiptPreview.merchant || "Unknown"}</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginBottom: "4px" }}>DATE</div>
-                  <div style={{ fontSize: "16px", color: "var(--text-primary)", fontWeight: "500" }}>{new Date(receiptPreview.date).toLocaleDateString()}</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginBottom: "4px" }}>CATEGORY</div>
-                  <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", backgroundColor: getCategoryStyles(receiptPreview.category).bg, color: getCategoryStyles(receiptPreview.category).color, padding: "4px 10px", borderRadius: "12px", fontSize: "12px", fontWeight: "bold" }}>
-                    <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: getCategoryStyles(receiptPreview.category).dot }}></span>
-                    {receiptPreview.category}
+              
+              <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? "10px" : "16px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: isMobile ? "10px" : "12px", color: "var(--text-secondary)", marginBottom: "2px" }}>MERCHANT</div>
+                    <div style={{ fontSize: isMobile ? "13px" : "16px", color: "var(--text-primary)", fontWeight: "500" }}>{receiptPreview.merchant || "Unknown"}</div>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: isMobile ? "10px" : "12px", color: "var(--text-secondary)", marginBottom: "2px" }}>DATE</div>
+                    <div style={{ fontSize: isMobile ? "13px" : "16px", color: "var(--text-primary)", fontWeight: "500" }}>{new Date(receiptPreview.date).toLocaleDateString()}</div>
                   </div>
                 </div>
-                <div>
-                  <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginBottom: "4px" }}>AMOUNT</div>
-                  <div style={{ fontSize: "24px", color: "#00d8f6", fontWeight: "700" }}>₱{parseFloat(receiptPreview.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: isMobile ? "10px" : "12px", color: "var(--text-secondary)", marginBottom: "2px" }}>CATEGORY</div>
+                    <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", backgroundColor: getCategoryStyles(receiptPreview.category).bg, color: getCategoryStyles(receiptPreview.category).color, padding: isMobile ? "2px 8px" : "4px 10px", borderRadius: "12px", fontSize: isMobile ? "10px" : "12px", fontWeight: "bold" }}>
+                      <span style={{ width: isMobile ? "4px" : "6px", height: isMobile ? "4px" : "6px", borderRadius: "50%", backgroundColor: getCategoryStyles(receiptPreview.category).dot }}></span>
+                      {receiptPreview.category}
+                    </div>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: isMobile ? "10px" : "12px", color: "var(--text-secondary)", marginBottom: "2px" }}>AMOUNT</div>
+                    <div style={{ fontSize: isMobile ? "18px" : "24px", color: "#00d8f6", fontWeight: "700" }}>₱{parseFloat(receiptPreview.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                  </div>
                 </div>
+                
                 {receiptPreview.description && receiptPreview.description !== receiptPreview.merchant && (
                   <div>
-                    <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginBottom: "4px" }}>NOTE</div>
-                    <div style={{ fontSize: "14px", color: "var(--text-primary)", lineHeight: "1.5" }}>{receiptPreview.description}</div>
+                    <div style={{ fontSize: isMobile ? "10px" : "12px", color: "var(--text-secondary)", marginBottom: "2px" }}>NOTE</div>
+                    <div style={{ fontSize: isMobile ? "12px" : "14px", color: "var(--text-primary)", lineHeight: "1.4" }}>{receiptPreview.description}</div>
                   </div>
                 )}
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Fullscreen Photo View */}
+      {receiptPreview && photoFullscreen && (
+        <div 
+          onClick={() => setPhotoFullscreen(false)}
+          style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "#000", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center" }}
+        >
+          <button 
+            onClick={(e) => { e.stopPropagation(); setPhotoFullscreen(false); }}
+            style={{ position: "absolute", top: "16px", left: "16px", background: "rgba(255,255,255,0.1)", border: "none", color: "#fff", borderRadius: "50%", padding: "10px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10 }}
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <img
+            src={receiptPreview.receipt_url.startsWith('http') ? receiptPreview.receipt_url : `${import.meta.env.VITE_API_URL}${receiptPreview.receipt_url}`}
+            alt="Receipt"
+            style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
       )}
     </div>

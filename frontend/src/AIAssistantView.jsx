@@ -414,7 +414,7 @@ function AIAssistantView() {
           }}
         >
           {messages.map((msg, index) => (
-            <div key={index} style={{ display: "flex", gap: "16px", maxWidth: "80%", alignSelf: msg.role === "user" ? "flex-end" : "flex-start", flexDirection: msg.role === "user" ? "row-reverse" : "row" }}>
+            <div key={index} style={{ display: "flex", gap: isMobile ? "10px" : "16px", maxWidth: isMobile ? "95%" : "80%", alignSelf: msg.role === "user" ? "flex-end" : "flex-start", flexDirection: msg.role === "user" ? "row-reverse" : "row" }}>
               {msg.role === "assistant" && (
                 <div
                   style={{
@@ -438,10 +438,10 @@ function AIAssistantView() {
                 style={{
                   backgroundColor: msg.role === "user" ? "rgba(0, 216, 246, 0.15)" : "rgba(0, 216, 246, 0.04)",
                   border: msg.role === "user" ? "1px solid rgba(0, 216, 246, 0.3)" : "1px solid rgba(0, 216, 246, 0.2)",
-                  padding: "16px 20px",
+                  padding: isMobile ? "12px 16px" : "16px 20px",
                   borderRadius: msg.role === "user" ? "16px 0 16px 16px" : "0 16px 16px 16px",
                   color: "var(--text-primary)",
-                  fontSize: "14px",
+                  fontSize: "13px",
                   lineHeight: "1.6",
                   whiteSpace: "pre-wrap",
                 }}
@@ -450,7 +450,7 @@ function AIAssistantView() {
             </div>
           ))}
           {isLoading && (
-            <div style={{ display: "flex", gap: "16px", maxWidth: "80%" }}>
+            <div style={{ display: "flex", gap: isMobile ? "10px" : "16px", maxWidth: isMobile ? "95%" : "80%" }}>
               <div
                 style={{
                   width: "32px",
@@ -468,7 +468,7 @@ function AIAssistantView() {
                   <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
                 </svg>
               </div>
-              <div style={{ padding: "16px 20px", color: "var(--text-secondary)", fontSize: "14px" }}>
+              <div style={{ padding: isMobile ? "12px 16px" : "16px 20px", color: "var(--text-secondary)", fontSize: "13px" }}>
                 Thinking...
               </div>
             </div>
@@ -538,9 +538,9 @@ function AIAssistantView() {
                 backgroundColor: "var(--bg-card-inner)",
                 border: "1px solid var(--border-color)",
                 borderRadius: "12px",
-                padding: "16px 48px 16px 16px",
+                padding: "12px 48px 12px 16px",
                 color: "var(--text-primary)",
-                fontSize: "14px",
+                fontSize: "13px",
                 outline: "none",
                 boxSizing: "border-box",
                 opacity: isLoading ? 0.5 : 1
