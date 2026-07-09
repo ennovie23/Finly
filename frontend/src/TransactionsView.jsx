@@ -323,6 +323,13 @@ function TransactionsView({ email, user_id }) {
           if (data.category && !categoriesList.includes(data.category)) {
             setCategoriesList(prev => Array.from(new Set([...prev, data.category])));
           }
+          
+          setModalConfig({ 
+            title: "Success! 🎙️", 
+            message: "Your voice log was analyzed. The manual entry form has been prefilled for you to review and log!", 
+            onConfirm: null 
+          });
+          setShowModal(true);
         } else {
           setModalConfig({ title: "Voice Log Failed", message: data.error || "Failed to process voice log.", onConfirm: null });
           setShowModal(true);
@@ -852,16 +859,23 @@ function TransactionsView({ email, user_id }) {
                 }
               `}
             </style>
-            <div style={{ width: "48px", height: "48px", borderRadius: "50%", backgroundColor: isListening ? "rgba(255, 69, 58, 0.2)" : "rgba(121, 40, 202, 0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: "48px", height: "48px", borderRadius: "50%", backgroundColor: isListening ? "rgba(255, 69, 58, 0.2)" : (isVoiceProcessing ? "rgba(0, 216, 246, 0.2)" : "rgba(121, 40, 202, 0.1)"), display: "flex", alignItems: "center", justifyContent: "center" }}>
+            {isVoiceProcessing ? (
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00d8f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: "spin 1s linear infinite" }}>
+                <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
+                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+              </svg>
+            ) : (
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={isListening ? "#FF453A" : "#7928CA"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" />
                 <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
                 <line x1="12" y1="19" x2="12" y2="23" />
                 <line x1="8" y1="23" x2="16" y2="23" />
               </svg>
+            )}
             </div>
-            <span style={{ fontSize: "16px", fontWeight: "600", color: isListening ? "#FF453A" : "var(--text-secondary)", transition: "color 0.2s" }} onMouseEnter={(e) => !isListening && (e.currentTarget.style.color = "var(--text-primary)")} onMouseLeave={(e) => !isListening && (e.currentTarget.style.color = "var(--text-secondary)")}>
-              {isListening ? "Listening..." : "Voice Log"}
+            <span style={{ fontSize: "16px", fontWeight: "600", color: isListening ? "#FF453A" : (isVoiceProcessing ? "#00d8f6" : "var(--text-secondary)"), transition: "color 0.2s" }} onMouseEnter={(e) => (!isListening && !isVoiceProcessing) && (e.currentTarget.style.color = "var(--text-primary)")} onMouseLeave={(e) => (!isListening && !isVoiceProcessing) && (e.currentTarget.style.color = "var(--text-secondary)")}>
+              {isVoiceProcessing ? "Analyzing..." : (isListening ? "Listening..." : "Voice Log")}
             </span>
           </button>
         </div>
@@ -936,28 +950,35 @@ function TransactionsView({ email, user_id }) {
           
           <button 
             onClick={handleVoiceLog}
+            disabled={isVoiceProcessing}
             style={{ 
               width: "64px", 
               height: "64px", 
               borderRadius: "50%", 
-              backgroundColor: isListening ? "rgba(255, 69, 58, 0.1)" : "var(--bg-card)", 
-              border: `1px solid ${isListening ? "rgba(255, 69, 58, 0.8)" : "var(--border-color)"}`, 
+              backgroundColor: isListening ? "rgba(255, 69, 58, 0.1)" : (isVoiceProcessing ? "rgba(0, 216, 246, 0.1)" : "var(--bg-card)"), 
+              border: `1px solid ${isListening ? "rgba(255, 69, 58, 0.8)" : (isVoiceProcessing ? "rgba(0, 216, 246, 0.8)" : "var(--border-color)")}`, 
               display: "flex", 
               alignItems: "center", 
               justifyContent: "center",
-              boxShadow: isListening ? "0 0 0 4px rgba(255, 69, 58, 0.3)" : "0 8px 24px rgba(0,0,0,0.6)",
-              cursor: "pointer",
+              boxShadow: isListening ? "0 0 0 4px rgba(255, 69, 58, 0.3)" : (isVoiceProcessing ? "0 0 0 4px rgba(0, 216, 246, 0.3)" : "0 8px 24px rgba(0,0,0,0.6)"),
+              cursor: isVoiceProcessing ? "wait" : "pointer",
               animation: isListening ? "pulse-border 1.5s infinite" : "none",
               marginLeft: "auto"
             }}
           >
-            <div style={{ width: "40px", height: "40px", borderRadius: "50%", backgroundColor: isListening ? "rgba(255, 69, 58, 0.2)" : "rgba(121, 40, 202, 0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={isListening ? "#FF453A" : "#7928CA"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" />
-                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                <line x1="12" y1="19" x2="12" y2="23" />
-                <line x1="8" y1="23" x2="16" y2="23" />
-              </svg>
+            <div style={{ width: "40px", height: "40px", borderRadius: "50%", backgroundColor: isListening ? "rgba(255, 69, 58, 0.2)" : (isVoiceProcessing ? "rgba(0, 216, 246, 0.2)" : "rgba(121, 40, 202, 0.1)"), display: "flex", alignItems: "center", justifyContent: "center" }}>
+              {isVoiceProcessing ? (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00d8f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: "spin 1s linear infinite" }}>
+                  <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                </svg>
+              ) : (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={isListening ? "#FF453A" : "#7928CA"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" />
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                  <line x1="12" y1="19" x2="12" y2="23" />
+                  <line x1="8" y1="23" x2="16" y2="23" />
+                </svg>
+              )}
             </div>
           </button>
         </div>
