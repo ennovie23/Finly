@@ -824,7 +824,26 @@ function TransactionsView({ email, user_id }) {
 
       {/* AI & Voice Action Buttons */}
       {!isMobile && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", marginBottom: "32px", opacity: viewTrash ? 0.5 : 1, pointerEvents: viewTrash ? "none" : "auto" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "24px", marginBottom: "32px", opacity: viewTrash ? 0.5 : 1, pointerEvents: viewTrash ? "none" : "auto" }}>
+          <div style={{ position: "relative" }}>
+            <button 
+              onClick={(e) => { e.stopPropagation(); document.getElementById("scanner-input-camera").click(); }}
+              disabled={isScanning}
+              style={{ width: "100%", backgroundColor: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: "16px", padding: "28px", display: "flex", flexDirection: "column", alignItems: "center", gap: "16px", cursor: isScanning ? "not-allowed" : "pointer", transition: "all 0.2s", opacity: isScanning ? 0.7 : 1 }} 
+              onMouseEnter={(e) => { if (!isScanning) e.currentTarget.style.backgroundColor = "var(--card-hover)" }} 
+              onMouseLeave={(e) => { if (!isScanning) e.currentTarget.style.backgroundColor = "var(--bg-card)" }}
+            >
+              <div style={{ width: "48px", height: "48px", borderRadius: "50%", backgroundColor: "rgba(0, 216, 246, 0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00d8f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                  <circle cx="12" cy="13" r="4" />
+                </svg>
+              </div>
+              <span style={{ fontSize: "16px", fontWeight: "600", color: "var(--text-secondary)", transition: "color 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.color = "var(--text-primary)"} onMouseLeave={(e) => e.currentTarget.style.color = "var(--text-secondary)"}>
+                {isScanning ? "Scanning..." : "Camera Scan"}
+              </span>
+            </button>
+          </div>
           <div style={{ position: "relative" }}>
             <button 
               onClick={(e) => { e.stopPropagation(); document.getElementById("scanner-input-gallery").click(); }}
@@ -914,16 +933,31 @@ function TransactionsView({ email, user_id }) {
               marginBottom: "8px",
             }}>
               <button 
+                onClick={(e) => { e.stopPropagation(); setShowScannerOptions(false); document.getElementById("scanner-input-camera").click(); }}
+                style={{ 
+                  display: "flex", alignItems: "center", gap: "12px", backgroundColor: "var(--bg-card)", border: "1px solid var(--border-color)", padding: "12px 16px", borderRadius: "100px", boxShadow: "0 4px 12px rgba(0,0,0,0.15)", cursor: "pointer"
+                }}
+              >
+                <span style={{ fontSize: "15px", fontWeight: "600", color: "var(--text-primary)" }}>Camera Scan</span>
+                <div style={{ width: "36px", height: "36px", borderRadius: "50%", backgroundColor: "rgba(0, 216, 246, 0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00d8f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                    <circle cx="12" cy="13" r="4" />
+                  </svg>
+                </div>
+              </button>
+              <button 
                 onClick={(e) => { e.stopPropagation(); setShowScannerOptions(false); document.getElementById("scanner-input-gallery").click(); }}
                 style={{ 
                   display: "flex", alignItems: "center", gap: "12px", backgroundColor: "var(--bg-card)", border: "1px solid var(--border-color)", padding: "12px 16px", borderRadius: "100px", boxShadow: "0 4px 12px rgba(0,0,0,0.15)", cursor: "pointer"
                 }}
               >
-                <span style={{ fontSize: "15px", fontWeight: "600", color: "var(--text-primary)" }}>Snap & Log AI</span>
+                <span style={{ fontSize: "15px", fontWeight: "600", color: "var(--text-primary)" }}>Upload Receipt</span>
                 <div style={{ width: "36px", height: "36px", borderRadius: "50%", backgroundColor: "rgba(0, 216, 246, 0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00d8f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                    <circle cx="12" cy="13" r="4" />
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="17 8 12 3 7 8" />
+                    <line x1="12" y1="3" x2="12" y2="15" />
                   </svg>
                 </div>
               </button>

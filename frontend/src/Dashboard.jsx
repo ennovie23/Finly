@@ -24,7 +24,11 @@ function Dashboard({
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   
+  const [showUnsavedModal, setShowUnsavedModal] = useState(false);
+  const [pendingTab, setPendingTab] = useState(null);
+  
   const [showAiSettings, setShowAiSettings] = useState(false);
+  const [isEditingAiSettings, setIsEditingAiSettings] = useState(false);
   const [aiProvider, setAiProvider] = useState(() => localStorage.getItem("spendsight_aiProvider") || "gemini");
   const [aiKey, setAiKey] = useState(() => localStorage.getItem("spendsight_aiKey") || "");
   const [aiModel, setAiModel] = useState(() => localStorage.getItem("spendsight_aiModel") || "gemini-2.5-flash");
@@ -35,6 +39,7 @@ function Dashboard({
     localStorage.setItem("spendsight_aiKey", aiKey);
     localStorage.setItem("spendsight_aiModel", aiModel);
     setShowAiSettings(false);
+    setIsEditingAiSettings(false);
 
     if (userId) {
       try {
@@ -50,6 +55,44 @@ function Dashboard({
       } catch (err) {
         console.error("Failed to save AI settings to database", err);
       }
+    }
+  };
+
+  const handleTabChange = (newTab) => {
+    if (activeTab === "ai-settings" && isEditingAiSettings) {
+      const hasChanges = 
+        aiProvider !== (localStorage.getItem("spendsight_aiProvider") || "gemini") ||
+        aiKey !== (localStorage.getItem("spendsight_aiKey") || "") ||
+        aiModel !== (localStorage.getItem("spendsight_aiModel") || "gemini-2.5-flash");
+
+      if (hasChanges) {
+        setPendingTab(newTab);
+        setShowUnsavedModal(true);
+        return; // wait for modal interaction
+      } else {
+        setIsEditingAiSettings(false);
+      }
+    }
+    
+    // Normal navigation
+    setActiveTab(newTab);
+    if (isMobile) setMobileSidebarOpen(false);
+  };
+
+  const handleUnsavedAction = (save) => {
+    if (save) {
+      saveAiSettings({ preventDefault: () => {} });
+    } else {
+      setAiProvider(localStorage.getItem("spendsight_aiProvider") || "gemini");
+      setAiKey(localStorage.getItem("spendsight_aiKey") || "");
+      setAiModel(localStorage.getItem("spendsight_aiModel") || "gemini-2.5-flash");
+      setIsEditingAiSettings(false);
+    }
+    setShowUnsavedModal(false);
+    if (pendingTab) {
+      setActiveTab(pendingTab);
+      if (isMobile) setMobileSidebarOpen(false);
+      setPendingTab(null);
     }
   };
 
@@ -293,7 +336,7 @@ function Dashboard({
             style={{ display: "flex", flexDirection: "column", gap: "10px" }}
           >
             <button
-              onClick={() => { setActiveTab("dashboard"); if (isMobile) setMobileSidebarOpen(false); }}
+              onClick={() => handleTabChange("dashboard")}
               title={isCollapsed ? "Dashboard" : undefined}
               style={{
                 display: "flex",
@@ -335,7 +378,7 @@ function Dashboard({
             </button>
 
             <button
-              onClick={() => { setActiveTab("transactions"); if (isMobile) setMobileSidebarOpen(false); }}
+              onClick={() => handleTabChange("transactions")}
               title={isCollapsed ? "Transactions" : undefined}
               style={{
                 display: "flex",
@@ -376,7 +419,7 @@ function Dashboard({
             </button>
 
             <button
-              onClick={() => { setActiveTab("assistant"); if (isMobile) setMobileSidebarOpen(false); }}
+              onClick={() => handleTabChange("assistant")}
               title={isCollapsed ? "AI Assistant" : undefined}
               style={{
                 display: "flex",
@@ -407,7 +450,7 @@ function Dashboard({
             </button>
 
             <button
-              onClick={() => { setActiveTab("photos"); if (isMobile) setMobileSidebarOpen(false); }}
+              onClick={() => handleTabChange("photos")}
               title={isCollapsed ? "Photos" : undefined}
               style={{
                 display: "flex",
@@ -448,7 +491,7 @@ function Dashboard({
             </button>
 
             <button
-              onClick={() => { setActiveTab("wallet"); if (isMobile) setMobileSidebarOpen(false); }}
+              onClick={() => handleTabChange("wallet")}
               title={isCollapsed ? "Wallet" : undefined}
               style={{
                 display: "flex",
@@ -480,7 +523,7 @@ function Dashboard({
             </button>
 
             <button
-              onClick={() => { setActiveTab("ai-settings"); if (isMobile) setMobileSidebarOpen(false); }}
+              onClick={() => handleTabChange("ai-settings")}
               title={isCollapsed ? "AI Settings" : undefined}
               style={{
                 display: "flex",
@@ -858,7 +901,7 @@ function Dashboard({
                   <form onSubmit={saveAiSettings} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
                     <div>
                       <label style={{ display: "block", fontSize: "14px", fontWeight: "600", marginBottom: "8px", color: "var(--text-secondary)" }}>AI Provider</label>
-                      <select value={aiProvider} onChange={(e) => setAiProvider(e.target.value)} style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid var(--border-color)", backgroundColor: "var(--bg-app)", color: "var(--text-primary)", fontSize: "15px", outline: "none" }}>
+                      <select disabled={!isEditingAiSettings} value={aiProvider} onChange={(e) => setAiProvider(e.target.value)} style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid var(--border-color)", backgroundColor: isEditingAiSettings ? "var(--bg-app)" : "transparent", color: "var(--text-primary)", fontSize: "15px", outline: "none", opacity: isEditingAiSettings ? 1 : 0.6 }}>
                         <option value="gemini">Google Gemini (Native)</option>
                         <option value="openrouter">OpenRouter (Universal)</option>
                       </select>
@@ -866,17 +909,21 @@ function Dashboard({
                     
                     <div>
                       <label style={{ display: "block", fontSize: "14px", fontWeight: "600", marginBottom: "8px", color: "var(--text-secondary)" }}>Custom API Key</label>
-                      <input type="password" value={aiKey} onChange={(e) => setAiKey(e.target.value)} placeholder="Leave blank to use default server key" style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid var(--border-color)", backgroundColor: "var(--bg-app)", color: "var(--text-primary)", fontSize: "15px", outline: "none" }} />
+                      <input disabled={!isEditingAiSettings} type="password" value={aiKey} onChange={(e) => setAiKey(e.target.value)} placeholder="Leave blank to use default server key" style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid var(--border-color)", backgroundColor: isEditingAiSettings ? "var(--bg-app)" : "transparent", color: "var(--text-primary)", fontSize: "15px", outline: "none", opacity: isEditingAiSettings ? 1 : 0.6 }} />
                     </div>
                     
                     <div>
                       <label style={{ display: "block", fontSize: "14px", fontWeight: "600", marginBottom: "8px", color: "var(--text-secondary)" }}>Model ID</label>
-                      <input type="text" value={aiModel} onChange={(e) => setAiModel(e.target.value)} placeholder="e.g., google/gemini-2.5-flash" style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid var(--border-color)", backgroundColor: "var(--bg-app)", color: "var(--text-primary)", fontSize: "15px", outline: "none" }} />
+                      <input disabled={!isEditingAiSettings} type="text" value={aiModel} onChange={(e) => setAiModel(e.target.value)} placeholder="e.g., google/gemini-2.5-flash" style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid var(--border-color)", backgroundColor: isEditingAiSettings ? "var(--bg-app)" : "transparent", color: "var(--text-primary)", fontSize: "15px", outline: "none", opacity: isEditingAiSettings ? 1 : 0.6 }} />
                       <p style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "8px" }}>Note: To scan images, you MUST use a Vision-capable model (like gemini-2.5-flash or gpt-4o).</p>
                     </div>
 
                     <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "12px" }}>
-                      <button type="submit" style={{ padding: "12px 24px", backgroundColor: "#00d8f6", border: "none", borderRadius: "10px", color: "#fff", fontWeight: "600", cursor: "pointer", transition: "opacity 0.2s" }}>Save Settings</button>
+                      {!isEditingAiSettings ? (
+                        <button type="button" onClick={(e) => { e.preventDefault(); setIsEditingAiSettings(true); }} style={{ padding: "12px 24px", backgroundColor: "rgba(0, 216, 246, 0.1)", border: "1px solid rgba(0, 216, 246, 0.2)", borderRadius: "10px", color: "#00d8f6", fontWeight: "600", cursor: "pointer", transition: "all 0.2s" }}>Edit Settings</button>
+                      ) : (
+                        <button type="submit" style={{ padding: "12px 24px", backgroundColor: "#00d8f6", border: "none", borderRadius: "10px", color: "#fff", fontWeight: "600", cursor: "pointer", transition: "opacity 0.2s" }}>Save Settings</button>
+                      )}
                     </div>
                   </form>
                 </div>
@@ -886,6 +933,22 @@ function Dashboard({
           </div>
         </div>
       </div>
+
+      {/* Unsaved Changes Modal */}
+      {showUnsavedModal && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.6)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div style={{ backgroundColor: "var(--bg-card)", padding: "24px", borderRadius: "16px", maxWidth: "400px", width: "100%", border: "1px solid var(--border-color)", boxShadow: "0 10px 25px rgba(0,0,0,0.5)" }}>
+            <h3 style={{ margin: "0 0 12px 0", fontSize: "20px", fontWeight: "700", color: "var(--text-primary)" }}>Unsaved Changes</h3>
+            <p style={{ margin: "0 0 24px 0", color: "var(--text-secondary)", fontSize: "15px", lineHeight: "1.5" }}>
+              You have unsaved changes in your AI Settings. Would you like to save them before leaving?
+            </p>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px" }}>
+              <button onClick={() => handleUnsavedAction(false)} style={{ padding: "10px 16px", backgroundColor: "rgba(255, 82, 82, 0.1)", border: "1px solid rgba(255, 82, 82, 0.2)", borderRadius: "8px", color: "#FF5252", fontWeight: "600", cursor: "pointer" }}>Discard</button>
+              <button onClick={() => handleUnsavedAction(true)} style={{ padding: "10px 16px", backgroundColor: "#00d8f6", border: "none", borderRadius: "8px", color: "#fff", fontWeight: "600", cursor: "pointer" }}>Save Settings</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
