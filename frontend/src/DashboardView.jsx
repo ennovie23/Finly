@@ -125,15 +125,16 @@ function DashboardView({ email, user_id }) {
       const amount = parseFloat(rawBreakdown[cat]) || 0;
       let percent = 0;
       if (totalBreakdownSpend > 0) {
-        runningExact += (amount / totalBreakdownSpend) * 100;
+        runningExact += (amount / totalBreakdownSpend) * 10000;
         const targetRounded = Math.round(runningExact);
-        percent = targetRounded - runningRounded;
+        percent = (targetRounded - runningRounded) / 100;
         runningRounded = targetRounded;
       }
 
       const item = {
         name: cat.charAt(0).toUpperCase() + cat.slice(1),
         percent,
+        amount,
         offset: 100 - currentOffset,
         color: colors[index % colors.length]
       };
@@ -454,7 +455,7 @@ function DashboardView({ email, user_id }) {
                 <div key={idx} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                   <span style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: item.color }}></span>
                   <span style={{ fontSize: "14px", color: item.percent > 0 ? "var(--text-primary)" : "var(--text-secondary)", fontWeight: item.percent > 0 ? "bold" : "normal" }}>
-                    {item.name} ({item.percent}%)
+                    {item.name} ({item.percent === 0 && item.amount > 0 ? "<0.01" : item.percent.toFixed(2)}%)
                   </span>
                 </div>
               ))}
