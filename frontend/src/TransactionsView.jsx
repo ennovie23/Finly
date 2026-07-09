@@ -810,24 +810,16 @@ function TransactionsView({ email, user_id }) {
                 display: "flex",
                 flexDirection: "column",
                 gap: "4px",
-                boxShadow: "0 10px 30px rgba(0,0,0,0.8)",
+                boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
                 zIndex: 10
               }}>
-                <button 
-                  onClick={(e) => { e.stopPropagation(); document.getElementById("scanner-input-camera").click(); }}
-                  style={{ padding: "12px 16px", backgroundColor: "transparent", border: "none", color: "var(--text-primary)", textAlign: "left", cursor: "pointer", borderRadius: "8px", fontSize: "14px", fontWeight: "600", whiteSpace: "nowrap" }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "rgba(0, 216, 246, 0.1)"}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
-                >
-                  📸 Take Photo
-                </button>
                 <button 
                   onClick={(e) => { e.stopPropagation(); document.getElementById("scanner-input-gallery").click(); }}
                   style={{ padding: "12px 16px", backgroundColor: "transparent", border: "none", color: "var(--text-primary)", textAlign: "left", cursor: "pointer", borderRadius: "8px", fontSize: "14px", fontWeight: "600", whiteSpace: "nowrap" }}
                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "rgba(0, 216, 246, 0.1)"}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
                 >
-                  🖼️ Upload from Gallery
+                  📷 Choose Image
                 </button>
               </div>
             )}
@@ -890,96 +882,95 @@ function TransactionsView({ email, user_id }) {
           display: "flex",
           flexDirection: "column",
           gap: "16px",
+          alignItems: "flex-end",
           zIndex: 900
         }}>
-          {showScannerOptions && !isScanning && (
+          {showScannerOptions && !isScanning && !isListening && !isVoiceProcessing && (
             <div style={{
-              position: "absolute",
-              bottom: "130px", // Appears above the scanner button
-              right: "0",
-              backgroundColor: "var(--bg-card)",
-              border: "1px solid var(--border-color)",
-              borderRadius: "16px",
-              padding: "12px",
               display: "flex",
               flexDirection: "column",
               gap: "12px",
-              boxShadow: "0 10px 30px rgba(0,0,0,0.8)",
-              minWidth: "200px"
+              alignItems: "flex-end",
+              marginBottom: "8px",
             }}>
               <button 
-                onClick={(e) => { e.stopPropagation(); document.getElementById("scanner-input-camera").click(); }}
-                style={{ padding: "12px 16px", backgroundColor: "transparent", border: "none", color: "var(--text-primary)", textAlign: "left", cursor: "pointer", borderRadius: "8px", fontSize: "15px", fontWeight: "600" }}
+                onClick={(e) => { e.stopPropagation(); setShowScannerOptions(false); document.getElementById("scanner-input-gallery").click(); }}
+                style={{ 
+                  display: "flex", alignItems: "center", gap: "12px", backgroundColor: "var(--bg-card)", border: "1px solid var(--border-color)", padding: "12px 16px", borderRadius: "100px", boxShadow: "0 4px 12px rgba(0,0,0,0.15)", cursor: "pointer"
+                }}
               >
-                📸 Take Photo
+                <span style={{ fontSize: "15px", fontWeight: "600", color: "var(--text-primary)" }}>Scan Receipt</span>
+                <div style={{ width: "36px", height: "36px", borderRadius: "50%", backgroundColor: "rgba(0, 216, 246, 0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00d8f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                    <circle cx="12" cy="13" r="4" />
+                  </svg>
+                </div>
               </button>
               <button 
-                onClick={(e) => { e.stopPropagation(); document.getElementById("scanner-input-gallery").click(); }}
-                style={{ padding: "12px 16px", backgroundColor: "transparent", border: "none", color: "var(--text-primary)", textAlign: "left", cursor: "pointer", borderRadius: "8px", fontSize: "15px", fontWeight: "600" }}
+                onClick={(e) => { e.stopPropagation(); setShowScannerOptions(false); handleVoiceLog(); }}
+                style={{ 
+                  display: "flex", alignItems: "center", gap: "12px", backgroundColor: "var(--bg-card)", border: "1px solid var(--border-color)", padding: "12px 16px", borderRadius: "100px", boxShadow: "0 4px 12px rgba(0,0,0,0.15)", cursor: "pointer"
+                }}
               >
-                🖼️ Upload from Gallery
+                <span style={{ fontSize: "15px", fontWeight: "600", color: "var(--text-primary)" }}>Voice Log</span>
+                <div style={{ width: "36px", height: "36px", borderRadius: "50%", backgroundColor: "rgba(121, 40, 202, 0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7928CA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" />
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                    <line x1="12" y1="19" x2="12" y2="23" />
+                    <line x1="8" y1="23" x2="16" y2="23" />
+                  </svg>
+                </div>
               </button>
             </div>
           )}
           
           <button 
-            onClick={() => setShowScannerOptions(!showScannerOptions)}
+            onClick={() => {
+              if (isListening || isVoiceProcessing) {
+                handleVoiceLog(); // Stop listening
+              } else {
+                setShowScannerOptions(!showScannerOptions);
+              }
+            }}
             disabled={isScanning}
             style={{ 
               width: "64px", 
               height: "64px", 
               borderRadius: "50%", 
-              backgroundColor: "var(--bg-card)", 
-              border: "1px solid var(--border-color)", 
+              backgroundColor: isListening ? "rgba(255, 69, 58, 0.1)" : (isVoiceProcessing ? "rgba(0, 216, 246, 0.1)" : "#00d8f6"), 
+              border: isListening ? "1px solid rgba(255, 69, 58, 0.8)" : (isVoiceProcessing ? "1px solid rgba(0, 216, 246, 0.8)" : "none"), 
+              color: (isListening || isVoiceProcessing) ? "transparent" : "#fff",
               display: "flex", 
               alignItems: "center", 
               justifyContent: "center",
-              boxShadow: "0 8px 24px rgba(0,0,0,0.6)",
+              boxShadow: isListening ? "0 0 0 4px rgba(255, 69, 58, 0.3)" : (isVoiceProcessing ? "0 0 0 4px rgba(0, 216, 246, 0.3)" : "0 4px 16px rgba(0, 216, 246, 0.4)"),
               cursor: isScanning ? "not-allowed" : "pointer",
               opacity: isScanning ? 0.7 : 1,
-              marginLeft: "auto"
-            }}
-          >
-            <div style={{ width: "40px", height: "40px", borderRadius: "50%", backgroundColor: "rgba(0, 216, 246, 0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00d8f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                <circle cx="12" cy="13" r="4" />
-              </svg>
-            </div>
-          </button>
-          
-          <button 
-            onClick={handleVoiceLog}
-            disabled={isVoiceProcessing}
-            style={{ 
-              width: "64px", 
-              height: "64px", 
-              borderRadius: "50%", 
-              backgroundColor: isListening ? "rgba(255, 69, 58, 0.1)" : (isVoiceProcessing ? "rgba(0, 216, 246, 0.1)" : "var(--bg-card)"), 
-              border: `1px solid ${isListening ? "rgba(255, 69, 58, 0.8)" : (isVoiceProcessing ? "rgba(0, 216, 246, 0.8)" : "var(--border-color)")}`, 
-              display: "flex", 
-              alignItems: "center", 
-              justifyContent: "center",
-              boxShadow: isListening ? "0 0 0 4px rgba(255, 69, 58, 0.3)" : (isVoiceProcessing ? "0 0 0 4px rgba(0, 216, 246, 0.3)" : "0 8px 24px rgba(0,0,0,0.6)"),
-              cursor: isVoiceProcessing ? "wait" : "pointer",
+              transition: "transform 0.3s ease",
+              transform: (showScannerOptions && !isListening && !isVoiceProcessing) ? "rotate(45deg)" : "rotate(0deg)",
               animation: isListening ? "pulse-border 1.5s infinite" : "none",
-              marginLeft: "auto"
             }}
           >
-            <div style={{ width: "40px", height: "40px", borderRadius: "50%", backgroundColor: isListening ? "rgba(255, 69, 58, 0.2)" : (isVoiceProcessing ? "rgba(0, 216, 246, 0.2)" : "rgba(121, 40, 202, 0.1)"), display: "flex", alignItems: "center", justifyContent: "center" }}>
-              {isVoiceProcessing ? (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00d8f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: "spin 1s linear infinite" }}>
-                  <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                </svg>
-              ) : (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={isListening ? "#FF453A" : "#7928CA"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" />
-                  <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                  <line x1="12" y1="19" x2="12" y2="23" />
-                  <line x1="8" y1="23" x2="16" y2="23" />
-                </svg>
-              )}
-            </div>
+            {isListening || isVoiceProcessing ? (
+              <div style={{ width: "40px", height: "40px", borderRadius: "50%", backgroundColor: isListening ? "rgba(255, 69, 58, 0.2)" : "rgba(0, 216, 246, 0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                {isVoiceProcessing ? (
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00d8f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ animation: "spin 1s linear infinite" }}>
+                    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                  </svg>
+                ) : (
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FF453A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="6" y="6" width="12" height="12" rx="2" ry="2" />
+                  </svg>
+                )}
+              </div>
+            ) : (
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+            )}
           </button>
         </div>
       )}
