@@ -42,6 +42,7 @@ function TransactionsView({ email, user_id }) {
   const [isScanning, setIsScanning] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isVoiceProcessing, setIsVoiceProcessing] = useState(false);
+  const recognitionRef = useRef(null);
   const [showScannerOptions, setShowScannerOptions] = useState(false);
   const [scanResult, setScanResult] = useState(null);
   const [receiptPreview, setReceiptPreview] = useState(null);
@@ -266,6 +267,12 @@ function TransactionsView({ email, user_id }) {
   };
 
   const handleVoiceLog = () => {
+    if (isListening && recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+      return;
+    }
+
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
       alert("Your browser does not support Voice Logging. Please try Chrome, Edge, or Safari.");
@@ -273,12 +280,18 @@ function TransactionsView({ email, user_id }) {
     }
 
     const recognition = new SpeechRecognition();
+    recognitionRef.current = recognition;
     recognition.lang = 'en-US';
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
 
     recognition.onstart = () => {
       setIsListening(true);
+    };
+
+    recognition.onend = () => {
+      // Just in case it naturally stops or is stopped manually, ensure state is reset
+      setIsListening(false);
     };
 
     recognition.onresult = async (event) => {
@@ -335,9 +348,13 @@ function TransactionsView({ email, user_id }) {
       setIsListening(false);
     };
 
-    recognition.start();
+    try {
+      recognition.start();
+    } catch (e) {
+      console.error("Speech recognition failed to start:", e);
+      setIsListening(false);
+    }
   };
-
   const handleSaveScan = async () => {
     if (!user_id) {
       setModalConfig({ title: "Error", message: "You are not logged in.", onConfirm: null });
@@ -736,117 +753,215 @@ function TransactionsView({ email, user_id }) {
       </div>
 
       {/* AI & Voice Action Buttons */}
-      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "24px", marginBottom: "32px" }}>
-        <div style={{ position: "relative" }}>
-          <input 
-            type="file" 
-            accept="image/*" 
-            capture="environment"
-            onChange={(e) => { setShowScannerOptions(false); handleImageUpload(e); }} 
-            id="scanner-input-camera" 
-            style={{ display: "none" }} 
-          />
-          <input 
-            type="file" 
-            accept="image/*" 
-            onChange={(e) => { setShowScannerOptions(false); handleImageUpload(e); }} 
-            id="scanner-input-gallery" 
-            style={{ display: "none" }} 
-          />
+      {!isMobile && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", marginBottom: "32px" }}>
+          <div style={{ position: "relative" }}>
+            <input 
+              type="file" 
+              accept="image/*" 
+              capture="environment"
+              onChange={(e) => { setShowScannerOptions(false); handleImageUpload(e); }} 
+              id="scanner-input-camera" 
+              style={{ display: "none" }} 
+            />
+            <input 
+              type="file" 
+              accept="image/*" 
+              onChange={(e) => { setShowScannerOptions(false); handleImageUpload(e); }} 
+              id="scanner-input-gallery" 
+              style={{ display: "none" }} 
+            />
+            <button 
+              onClick={() => setShowScannerOptions(!showScannerOptions)}
+              disabled={isScanning}
+              style={{ width: "100%", backgroundColor: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: "16px", padding: "28px", display: "flex", flexDirection: "column", alignItems: "center", gap: "16px", cursor: isScanning ? "not-allowed" : "pointer", transition: "all 0.2s", opacity: isScanning ? 0.7 : 1 }} 
+              onMouseEnter={(e) => { if (!isScanning) e.currentTarget.style.backgroundColor = "var(--card-hover)" }} 
+              onMouseLeave={(e) => { if (!isScanning) e.currentTarget.style.backgroundColor = "var(--bg-card)" }}
+            >
+              <div style={{ width: "48px", height: "48px", borderRadius: "50%", backgroundColor: "rgba(0, 216, 246, 0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00d8f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                  <circle cx="12" cy="13" r="4" />
+                </svg>
+              </div>
+              <span style={{ fontSize: "16px", fontWeight: "600", color: "var(--text-secondary)", transition: "color 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.color = "var(--text-primary)"} onMouseLeave={(e) => e.currentTarget.style.color = "var(--text-secondary)"}>
+                {isScanning ? "Scanning..." : "Snap & Log AI"}
+              </span>
+            </button>
+            
+            {showScannerOptions && !isScanning && (
+              <div style={{
+                position: "absolute",
+                bottom: "100%",
+                left: "50%",
+                transform: "translateX(-50%)",
+                marginBottom: "8px",
+                backgroundColor: "var(--bg-card-inner)",
+                border: "1px solid var(--border-color)",
+                borderRadius: "12px",
+                padding: "8px",
+                display: "flex",
+                flexDirection: "column",
+                gap: "4px",
+                boxShadow: "0 10px 30px rgba(0,0,0,0.8)",
+                zIndex: 10
+              }}>
+                <button 
+                  onClick={(e) => { e.stopPropagation(); document.getElementById("scanner-input-camera").click(); }}
+                  style={{ padding: "12px 16px", backgroundColor: "transparent", border: "none", color: "var(--text-primary)", textAlign: "left", cursor: "pointer", borderRadius: "8px", fontSize: "14px", fontWeight: "600", whiteSpace: "nowrap" }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "rgba(0, 216, 246, 0.1)"}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
+                >
+                  📸 Take Photo
+                </button>
+                <button 
+                  onClick={(e) => { e.stopPropagation(); document.getElementById("scanner-input-gallery").click(); }}
+                  style={{ padding: "12px 16px", backgroundColor: "transparent", border: "none", color: "var(--text-primary)", textAlign: "left", cursor: "pointer", borderRadius: "8px", fontSize: "14px", fontWeight: "600", whiteSpace: "nowrap" }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "rgba(0, 216, 246, 0.1)"}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
+                >
+                  🖼️ Upload from Gallery
+                </button>
+              </div>
+            )}
+          </div>
           <button 
-            onClick={() => setShowScannerOptions(!showScannerOptions)}
-            disabled={isScanning}
-            style={{ width: "100%", backgroundColor: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: "16px", padding: "28px", display: "flex", flexDirection: "column", alignItems: "center", gap: "16px", cursor: isScanning ? "not-allowed" : "pointer", transition: "all 0.2s", opacity: isScanning ? 0.7 : 1 }} 
-            onMouseEnter={(e) => { if (!isScanning) e.currentTarget.style.backgroundColor = "var(--card-hover)" }} 
-            onMouseLeave={(e) => { if (!isScanning) e.currentTarget.style.backgroundColor = "var(--bg-card)" }}
+            onClick={handleVoiceLog}
+            style={{ 
+              backgroundColor: isListening ? "rgba(255, 69, 58, 0.1)" : "var(--bg-card)", 
+              border: `1px solid ${isListening ? "rgba(255, 69, 58, 0.5)" : "var(--border-color)"}`, 
+              borderRadius: "16px", 
+              padding: "28px", 
+              display: "flex", 
+              flexDirection: "column", 
+              alignItems: "center", 
+              gap: "16px", 
+              cursor: "pointer", 
+              transition: "all 0.2s",
+              animation: isListening ? "pulse-border 1.5s infinite" : "none"
+            }} 
+            onMouseEnter={(e) => !isListening && (e.currentTarget.style.backgroundColor = "rgba(121, 40, 202, 0.08)")} 
+            onMouseLeave={(e) => !isListening && (e.currentTarget.style.backgroundColor = "var(--bg-card)")}
           >
-            <div style={{ width: "48px", height: "48px", borderRadius: "50%", backgroundColor: "rgba(0, 216, 246, 0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00d8f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                <circle cx="12" cy="13" r="4" />
+            <style>
+              {`
+                @keyframes pulse-border {
+                  0% { box-shadow: 0 0 0 0 rgba(255, 69, 58, 0.4); }
+                  70% { box-shadow: 0 0 0 10px rgba(255, 69, 58, 0); }
+                  100% { box-shadow: 0 0 0 0 rgba(255, 69, 58, 0); }
+                }
+              `}
+            </style>
+            <div style={{ width: "48px", height: "48px", borderRadius: "50%", backgroundColor: isListening ? "rgba(255, 69, 58, 0.2)" : "rgba(121, 40, 202, 0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={isListening ? "#FF453A" : "#7928CA"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" />
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                <line x1="12" y1="19" x2="12" y2="23" />
+                <line x1="8" y1="23" x2="16" y2="23" />
               </svg>
             </div>
-            <span style={{ fontSize: "16px", fontWeight: "600", color: "var(--text-secondary)", transition: "color 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.color = "var(--text-primary)"} onMouseLeave={(e) => e.currentTarget.style.color = "var(--text-secondary)"}>
-              {isScanning ? "Scanning..." : "Snap & Log AI"}
+            <span style={{ fontSize: "16px", fontWeight: "600", color: isListening ? "#FF453A" : "var(--text-secondary)", transition: "color 0.2s" }} onMouseEnter={(e) => !isListening && (e.currentTarget.style.color = "var(--text-primary)")} onMouseLeave={(e) => !isListening && (e.currentTarget.style.color = "var(--text-secondary)")}>
+              {isListening ? "Listening..." : "Voice Log"}
             </span>
           </button>
-          
+        </div>
+      )}
+
+      {/* Floating Action Buttons for Mobile */}
+      {isMobile && (
+        <div style={{
+          position: "fixed",
+          bottom: "24px",
+          right: "24px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "16px",
+          zIndex: 900
+        }}>
           {showScannerOptions && !isScanning && (
             <div style={{
               position: "absolute",
-              bottom: "100%",
-              left: "50%",
-              transform: "translateX(-50%)",
-              marginBottom: "8px",
-              backgroundColor: "var(--bg-card-inner)",
+              bottom: "130px", // Appears above the scanner button
+              right: "0",
+              backgroundColor: "var(--bg-card)",
               border: "1px solid var(--border-color)",
-              borderRadius: "12px",
-              padding: "8px",
+              borderRadius: "16px",
+              padding: "12px",
               display: "flex",
               flexDirection: "column",
-              gap: "4px",
+              gap: "12px",
               boxShadow: "0 10px 30px rgba(0,0,0,0.8)",
-              zIndex: 10
+              minWidth: "200px"
             }}>
               <button 
                 onClick={(e) => { e.stopPropagation(); document.getElementById("scanner-input-camera").click(); }}
-                style={{ padding: "12px 16px", backgroundColor: "transparent", border: "none", color: "var(--text-primary)", textAlign: "left", cursor: "pointer", borderRadius: "8px", fontSize: "14px", fontWeight: "600", whiteSpace: "nowrap" }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "rgba(0, 216, 246, 0.1)"}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
+                style={{ padding: "12px 16px", backgroundColor: "transparent", border: "none", color: "var(--text-primary)", textAlign: "left", cursor: "pointer", borderRadius: "8px", fontSize: "15px", fontWeight: "600" }}
               >
                 📸 Take Photo
               </button>
               <button 
                 onClick={(e) => { e.stopPropagation(); document.getElementById("scanner-input-gallery").click(); }}
-                style={{ padding: "12px 16px", backgroundColor: "transparent", border: "none", color: "var(--text-primary)", textAlign: "left", cursor: "pointer", borderRadius: "8px", fontSize: "14px", fontWeight: "600", whiteSpace: "nowrap" }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "rgba(0, 216, 246, 0.1)"}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
+                style={{ padding: "12px 16px", backgroundColor: "transparent", border: "none", color: "var(--text-primary)", textAlign: "left", cursor: "pointer", borderRadius: "8px", fontSize: "15px", fontWeight: "600" }}
               >
                 🖼️ Upload from Gallery
               </button>
             </div>
           )}
+          
+          <button 
+            onClick={() => setShowScannerOptions(!showScannerOptions)}
+            disabled={isScanning}
+            style={{ 
+              width: "64px", 
+              height: "64px", 
+              borderRadius: "50%", 
+              backgroundColor: "var(--bg-card)", 
+              border: "1px solid var(--border-color)", 
+              display: "flex", 
+              alignItems: "center", 
+              justifyContent: "center",
+              boxShadow: "0 8px 24px rgba(0,0,0,0.6)",
+              cursor: isScanning ? "not-allowed" : "pointer",
+              opacity: isScanning ? 0.7 : 1,
+              marginLeft: "auto"
+            }}
+          >
+            <div style={{ width: "40px", height: "40px", borderRadius: "50%", backgroundColor: "rgba(0, 216, 246, 0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00d8f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                <circle cx="12" cy="13" r="4" />
+              </svg>
+            </div>
+          </button>
+          
+          <button 
+            onClick={handleVoiceLog}
+            style={{ 
+              width: "64px", 
+              height: "64px", 
+              borderRadius: "50%", 
+              backgroundColor: isListening ? "rgba(255, 69, 58, 0.1)" : "var(--bg-card)", 
+              border: `1px solid ${isListening ? "rgba(255, 69, 58, 0.8)" : "var(--border-color)"}`, 
+              display: "flex", 
+              alignItems: "center", 
+              justifyContent: "center",
+              boxShadow: isListening ? "0 0 0 4px rgba(255, 69, 58, 0.3)" : "0 8px 24px rgba(0,0,0,0.6)",
+              cursor: "pointer",
+              animation: isListening ? "pulse-border 1.5s infinite" : "none",
+              marginLeft: "auto"
+            }}
+          >
+            <div style={{ width: "40px", height: "40px", borderRadius: "50%", backgroundColor: isListening ? "rgba(255, 69, 58, 0.2)" : "rgba(121, 40, 202, 0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={isListening ? "#FF453A" : "#7928CA"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" />
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                <line x1="12" y1="19" x2="12" y2="23" />
+                <line x1="8" y1="23" x2="16" y2="23" />
+              </svg>
+            </div>
+          </button>
         </div>
-        <button 
-          onClick={handleVoiceLog}
-          style={{ 
-            backgroundColor: isListening ? "rgba(255, 69, 58, 0.1)" : "var(--bg-card)", 
-            border: `1px solid ${isListening ? "rgba(255, 69, 58, 0.5)" : "var(--border-color)"}`, 
-            borderRadius: "16px", 
-            padding: "28px", 
-            display: "flex", 
-            flexDirection: "column", 
-            alignItems: "center", 
-            gap: "16px", 
-            cursor: "pointer", 
-            transition: "all 0.2s",
-            animation: isListening ? "pulse-border 1.5s infinite" : "none"
-          }} 
-          onMouseEnter={(e) => !isListening && (e.currentTarget.style.backgroundColor = "rgba(121, 40, 202, 0.08)")} 
-          onMouseLeave={(e) => !isListening && (e.currentTarget.style.backgroundColor = "var(--bg-card)")}
-        >
-          <style>
-            {`
-              @keyframes pulse-border {
-                0% { box-shadow: 0 0 0 0 rgba(255, 69, 58, 0.4); }
-                70% { box-shadow: 0 0 0 10px rgba(255, 69, 58, 0); }
-                100% { box-shadow: 0 0 0 0 rgba(255, 69, 58, 0); }
-              }
-            `}
-          </style>
-          <div style={{ width: "48px", height: "48px", borderRadius: "50%", backgroundColor: isListening ? "rgba(255, 69, 58, 0.2)" : "rgba(121, 40, 202, 0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={isListening ? "#FF453A" : "#7928CA"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" />
-              <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-              <line x1="12" y1="19" x2="12" y2="23" />
-              <line x1="8" y1="23" x2="16" y2="23" />
-            </svg>
-          </div>
-          <span style={{ fontSize: "16px", fontWeight: "600", color: isListening ? "#FF453A" : "var(--text-secondary)", transition: "color 0.2s" }} onMouseEnter={(e) => !isListening && (e.currentTarget.style.color = "var(--text-primary)")} onMouseLeave={(e) => !isListening && (e.currentTarget.style.color = "var(--text-secondary)")}>
-            {isListening ? "Listening..." : "Voice Log"}
-          </span>
-        </button>
-      </div>
+      )}
 
       {/* Two Column Grid */}
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 2fr", gap: "32px", alignItems: "start" }}>
