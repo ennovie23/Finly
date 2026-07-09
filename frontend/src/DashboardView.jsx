@@ -115,9 +115,22 @@ function DashboardView({ email, user_id }) {
     const colors = ["#00d8f6", "#7928CA", "#00E676", "#FF007A", "#FF9800", "#E91E63", "#9C27B0", "#00E5FF", "#4CAF50", "#FFEB3B"];
     
     let currentOffset = 0;
+    let runningExact = 0;
+    let runningRounded = 0;
+
+    // Sort categories by amount descending so largest slices are first
+    categories.sort((a, b) => (parseFloat(rawBreakdown[b]) || 0) - (parseFloat(rawBreakdown[a]) || 0));
+
     return categories.map((cat, index) => {
       const amount = parseFloat(rawBreakdown[cat]) || 0;
-      const percent = totalBreakdownSpend > 0 ? Math.round((amount / totalBreakdownSpend) * 100) : 0;
+      let percent = 0;
+      if (totalBreakdownSpend > 0) {
+        runningExact += (amount / totalBreakdownSpend) * 100;
+        const targetRounded = Math.round(runningExact);
+        percent = targetRounded - runningRounded;
+        runningRounded = targetRounded;
+      }
+
       const item = {
         name: cat.charAt(0).toUpperCase() + cat.slice(1),
         percent,
