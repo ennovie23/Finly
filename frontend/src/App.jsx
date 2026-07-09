@@ -177,7 +177,8 @@ function App() {
     <div
       style={{
         backgroundColor: "#080B11",
-        minHeight: "100vh",
+        height: "100dvh",
+        overflow: "hidden",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",

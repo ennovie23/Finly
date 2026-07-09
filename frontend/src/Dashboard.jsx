@@ -101,7 +101,7 @@ function Dashboard({
     <div
       style={{
         backgroundColor: "var(--bg-app)",
-        height: "100vh",
+        height: "100dvh",
         display: "flex",
         flexDirection: "row",
         color: "var(--text-primary)",
@@ -126,7 +126,7 @@ function Dashboard({
       <div
         style={{
           backgroundColor: "var(--bg-sidebar)",
-          height: "100vh",
+          height: "100dvh",
           position: isMobile ? "fixed" : "relative",
           zIndex: isMobile ? 999 : 1,
           left: 0,
