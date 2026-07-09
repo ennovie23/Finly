@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 // Helper to fetch current date in YYYY-MM-DD format
 const getTodayDateString = () => {
