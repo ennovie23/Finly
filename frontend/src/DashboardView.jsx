@@ -384,6 +384,33 @@ function DashboardView({ email, user_id }) {
         </div>
       </div>
 
+      {/* Weekly Budget Health Card */}
+      <div style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: "16px", padding: "24px 28px", marginBottom: "32px", position: "relative" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div style={{ backgroundColor: "rgba(0, 230, 118, 0.1)", borderRadius: "8px", padding: "8px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00E676" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="6" width="20" height="12" rx="2" ry="2" />
+                <line x1="22" y1="12" x2="22" y2="12" />
+              </svg>
+            </div>
+            <div style={{ textAlign: "left" }}>
+              <h3 style={{ fontSize: "16px", fontWeight: "700", color: "var(--text-primary)", margin: "0 0 4px 0" }}>Weekly Budget Health</h3>
+              <span style={{ fontSize: "13px", color: "var(--text-secondary)" }}>Stamina remaining</span>
+            </div>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <div style={{ fontSize: "18px", fontWeight: "800", color: "var(--text-primary)" }}>₱375</div>
+            <div style={{ fontSize: "13px", color: "var(--text-secondary)" }}>left of ₱3,500</div>
+          </div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+          <div style={{ flexGrow: 1, height: "10px", backgroundColor: "var(--bg-card-inner)", borderRadius: "5px", overflow: "hidden" }}>
+            <div style={{ width: "89%", height: "100%", backgroundColor: "#FFEB3B", borderRadius: "5px" }}></div>
+          </div>
+        </div>
+      </div>
+
       {/* Charts Section Row */}
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fit, minmax(400px, 1fr))", gap: "24px" }}>
         
@@ -435,59 +462,58 @@ function DashboardView({ email, user_id }) {
           </div>
         </div>
 
-        {/* Spend Trends Line Chart (Mocked) */}
+        {/* Predictive Spending Forecast */}
         <div style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: "16px", padding: "28px" }}>
-          <h2 style={{ fontSize: "18px", fontWeight: "700", color: "var(--text-primary)", margin: "0 0 10px 0", textAlign: "left" }}>
-            {isDaily ? "Daily Spend Trends" : "Monthly Spend Trends"}
-          </h2>
-          <p style={{ color: "var(--text-secondary)", fontSize: "14px", margin: "0 0 28px 0", textAlign: "left" }}>
-            {isDaily ? `Overview of daily spending for ${selectedMonth}.` : "Overview of total spending across months."}
-          </p>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "32px" }}>
+            <div style={{ backgroundColor: "rgba(121, 40, 202, 0.1)", borderRadius: "8px", padding: "8px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7928CA" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+              </svg>
+            </div>
+            <h2 style={{ fontSize: "18px", fontWeight: "700", color: "var(--text-primary)", margin: 0, textAlign: "left" }}>
+              Predictive Spending Forecast
+            </h2>
+          </div>
 
-          <div style={{ position: "relative", width: "100%", height: "140px", boxSizing: "border-box" }}>
-            {/* SVG Line Chart */}
+          <div style={{ position: "relative", width: "100%", height: "240px", boxSizing: "border-box", paddingLeft: "40px", paddingBottom: "24px" }}>
             <svg width="100%" height="100%" viewBox="0 0 300 120" preserveAspectRatio="none">
               {/* Grid Lines */}
-              <line x1="0" y1="100" x2="300" y2="100" stroke="var(--bg-card-inner)" strokeWidth="1" strokeDasharray="4 4" />
-              <line x1="0" y1="60" x2="300" y2="60" stroke="var(--bg-card-inner)" strokeWidth="1" strokeDasharray="4 4" />
-              <line x1="0" y1="20" x2="300" y2="20" stroke="var(--bg-card-inner)" strokeWidth="1" strokeDasharray="4 4" />
+              {[120, 90, 60, 30, 0].map((y, i) => (
+                <line key={i} x1="0" y1={y} x2="300" y2={y} stroke="var(--bg-card-inner)" strokeWidth="1" strokeDasharray="4 4" />
+              ))}
+              
+              {/* Solid Line (Past) */}
+              <path d="M 0 110 L 50 95 L 100 80 L 150 65" fill="none" stroke="#00d8f6" strokeWidth="3" />
+              {/* Dotted Line (Forecast) */}
+              <path d="M 150 65 L 200 45 L 250 25 L 300 10" fill="none" stroke="#7928CA" strokeWidth="3" strokeDasharray="6 6" />
 
-              {/* Gradient beneath the line */}
-              <defs>
-                <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#00d8f6" stopOpacity="0.3" />
-                  <stop offset="100%" stopColor="#00d8f6" stopOpacity="0.0" />
-                </linearGradient>
-              </defs>
-              <path d={trendGradientPath} fill="url(#lineGrad)" />
-
-              {/* Main Line */}
-              <path d={trendLinePath} fill="none" stroke="#00d8f6" strokeWidth="3" />
-
-              {/* Line nodes */}
-              {trendData.map((d, i) => {
-                if (isDaily && d.spend === 0) return null;
-                return <circle key={i} cx={d.x} cy={d.y} r="4" fill="var(--bg-card)" stroke="#00d8f6" strokeWidth="2.5" />;
-              })}
+              {/* Data points */}
+              {[
+                { x: 0, y: 110 }, { x: 50, y: 95 }, { x: 100, y: 80 }, { x: 150, y: 65 }
+              ].map((p, i) => (
+                <circle key={i} cx={p.x} cy={p.y} r="4" fill="var(--bg-card)" stroke="#00d8f6" strokeWidth="2.5" />
+              ))}
             </svg>
 
-            {/* Labels and values overlay */}
-            {trendData.map((d, i) => {
-              // Hide some labels if there are too many data points (e.g. daily data) to avoid overlapping
-              const showLabel = trendData.length <= 15 || i % Math.ceil(trendData.length / 8) === 0 || i === trendData.length - 1;
-              return (
-                <div key={i} style={{ display: showLabel ? "block" : "none" }}>
-                  {(!isDaily || d.spend > 0) && (
-                    <div style={{ position: "absolute", left: `${(d.x / 300) * 100}%`, top: `${(d.y / 120) * 100}%`, transform: "translate(-50%, -150%)", color: "#00d8f6", fontSize: "12px", fontWeight: "bold" }}>
-                      {formatCurrencySimple(d.spend)}
-                    </div>
-                  )}
-                  <div style={{ position: "absolute", left: `${(d.x / 300) * 100}%`, bottom: "-15px", transform: "translateX(-50%)", color: "var(--text-secondary)", fontSize: "12px", fontWeight: "600" }}>
-                    {d.label}
-                  </div>
-                </div>
-              );
-            })}
+            {/* Y-axis labels */}
+            <div style={{ position: "absolute", left: "0", top: "0", height: "calc(100% - 24px)", display: "flex", flexDirection: "column", justifyContent: "space-between", color: "var(--text-secondary)", fontSize: "11px" }}>
+              <span style={{ transform: "translateY(-50%)" }}>₱12k</span>
+              <span style={{ transform: "translateY(-50%)" }}>₱9k</span>
+              <span style={{ transform: "translateY(-50%)" }}>₱6k</span>
+              <span style={{ transform: "translateY(-50%)" }}>₱3k</span>
+              <span style={{ transform: "translateY(-50%)" }}>₱0k</span>
+            </div>
+
+            {/* X-axis labels */}
+            <div style={{ position: "absolute", left: "40px", bottom: "0", width: "calc(100% - 40px)", display: "flex", justifyContent: "space-between", color: "var(--text-secondary)", fontSize: "11px" }}>
+              <span>1</span>
+              <span>5</span>
+              <span>10</span>
+              <span>15</span>
+              <span>20</span>
+              <span>25</span>
+              <span>30</span>
+            </div>
           </div>
         </div>
       </div>

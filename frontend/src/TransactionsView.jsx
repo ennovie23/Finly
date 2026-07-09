@@ -523,21 +523,51 @@ function TransactionsView({ email, user_id }) {
         </div>
       </div>
 
+      {/* AI & Voice Action Buttons */}
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "24px", marginBottom: "32px" }}>
+        <button style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: "16px", padding: "28px", display: "flex", flexDirection: "column", alignItems: "center", gap: "16px", cursor: "pointer", transition: "all 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "var(--card-hover)"} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "var(--bg-card)"}>
+          <div style={{ width: "48px", height: "48px", borderRadius: "50%", backgroundColor: "rgba(0, 216, 246, 0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00d8f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+              <circle cx="12" cy="13" r="4" />
+            </svg>
+          </div>
+          <span style={{ fontSize: "16px", fontWeight: "600", color: "var(--text-secondary)", transition: "color 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.color = "var(--text-primary)"} onMouseLeave={(e) => e.currentTarget.style.color = "var(--text-secondary)"}>AI Receipt Scanner</span>
+        </button>
+        <button style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: "16px", padding: "28px", display: "flex", flexDirection: "column", alignItems: "center", gap: "16px", cursor: "pointer", transition: "all 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "rgba(121, 40, 202, 0.08)"} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "var(--bg-card)"}>
+          <div style={{ width: "48px", height: "48px", borderRadius: "50%", backgroundColor: "rgba(121, 40, 202, 0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7928CA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" />
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+              <line x1="12" y1="19" x2="12" y2="23" />
+              <line x1="8" y1="23" x2="16" y2="23" />
+            </svg>
+          </div>
+          <span style={{ fontSize: "16px", fontWeight: "600", color: "var(--text-secondary)", transition: "color 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.color = "var(--text-primary)"} onMouseLeave={(e) => e.currentTarget.style.color = "var(--text-secondary)"}>Voice Log</span>
+        </button>
+      </div>
+
       {/* Two Column Grid */}
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 2fr", gap: "32px", alignItems: "start" }}>
         
         {/* Left Column: New Transaction Form */}
         <div style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: "16px", padding: isMobile ? "20px" : "28px", textAlign: "left", opacity: viewTrash ? 0.5 : 1, pointerEvents: viewTrash ? "none" : "auto" }}>
           <h2 style={{ fontSize: "18px", fontWeight: "700", color: "var(--text-primary)", margin: "0 0 24px 0" }}>
-            {editingId ? "Edit Transaction" : "New Transaction"}
+            {editingId ? "Edit Transaction" : "Manual Entry"}
           </h2>
 
           <form onSubmit={handleAddExpense} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
             {/* Amount input */}
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
               <label style={{ color: "var(--text-secondary)", fontSize: "14px", fontWeight: "500" }}>Amount (₱)</label>
-              <div style={{ position: "relative" }}>
-                <span style={{ position: "absolute", left: "16px", top: "12px", color: "var(--text-secondary)", fontSize: "15px" }}>₱</span>
+              <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                <div style={{ position: "absolute", left: "14px", pointerEvents: "none", color: "var(--text-secondary)", display: "flex" }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="16" />
+                    <line x1="8" y1="12" x2="16" y2="12" />
+                  </svg>
+                </div>
                 <input
                   type="number"
                   step="0.01"
@@ -550,7 +580,7 @@ function TransactionsView({ email, user_id }) {
                     backgroundColor: "var(--bg-card-inner)",
                     border: "1px solid var(--border-color)",
                     borderRadius: "8px",
-                    padding: "12px 16px 12px 32px",
+                    padding: "12px 16px 12px 40px",
                     color: "var(--text-primary)",
                     fontSize: "15px",
                     outline: "none",
@@ -563,28 +593,35 @@ function TransactionsView({ email, user_id }) {
             {/* Category selection */}
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
               <label style={{ color: "var(--text-secondary)", fontSize: "14px", fontWeight: "500" }}>Category</label>
-              <select
-                value={category}
-                onChange={(e) => {
-                  setCategory(e.target.value);
-                  if (e.target.value !== "Other") {
-                    setCustomCategory("");
-                  }
-                }}
-                disabled={viewTrash}
-                style={{
-                  width: "100%",
-                  backgroundColor: "var(--bg-card-inner)",
-                  border: "1px solid var(--border-color)",
-                  borderRadius: "8px",
-                  padding: "12px 16px",
-                  color: "var(--text-primary)",
-                  fontSize: "15px",
-                  outline: "none",
-                  boxSizing: "border-box",
-                  cursor: "pointer",
-                }}
-              >
+              <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                <div style={{ position: "absolute", left: "14px", pointerEvents: "none", color: "var(--text-secondary)", display: "flex" }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+                    <line x1="7" y1="7" x2="7.01" y2="7" />
+                  </svg>
+                </div>
+                <select
+                  value={category}
+                  onChange={(e) => {
+                    setCategory(e.target.value);
+                    if (e.target.value !== "Other") {
+                      setCustomCategory("");
+                    }
+                  }}
+                  disabled={viewTrash}
+                  style={{
+                    width: "100%",
+                    backgroundColor: "var(--bg-card-inner)",
+                    border: "1px solid var(--border-color)",
+                    borderRadius: "8px",
+                    padding: "12px 16px 12px 40px",
+                    color: "var(--text-primary)",
+                    fontSize: "15px",
+                    outline: "none",
+                    boxSizing: "border-box",
+                    cursor: "pointer",
+                  }}
+                >
                 {categoriesList.map((cat) => (
                   <option key={cat} value={cat}>
                     {cat}
@@ -593,6 +630,7 @@ function TransactionsView({ email, user_id }) {
                 <option value="Other">Other (Custom)</option>
               </select>
             </div>
+          </div>
 
             {/* Custom Category name input (Only if Category === "Other") */}
             {category === "Other" && (
@@ -644,25 +682,35 @@ function TransactionsView({ email, user_id }) {
             {/* Date selection */}
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
               <label style={{ color: "var(--text-secondary)", fontSize: "14px", fontWeight: "500" }}>Date</label>
-              <input
-                type="date"
-                value={date}
-                max={getTodayDateString()}
-                onChange={(e) => setDate(e.target.value)}
-                disabled={viewTrash}
-                style={{
-                  width: "100%",
-                  backgroundColor: "var(--bg-card-inner)",
-                  border: "1px solid var(--border-color)",
-                  borderRadius: "8px",
-                  padding: "12px 16px",
-                  color: "var(--text-primary)",
-                  fontSize: "15px",
-                  outline: "none",
-                  boxSizing: "border-box",
-                  cursor: "pointer",
-                }}
-              />
+              <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                <div style={{ position: "absolute", left: "14px", pointerEvents: "none", color: "var(--text-secondary)", display: "flex" }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                  </svg>
+                </div>
+                <input
+                  type="date"
+                  value={date}
+                  max={getTodayDateString()}
+                  onChange={(e) => setDate(e.target.value)}
+                  disabled={viewTrash}
+                  style={{
+                    width: "100%",
+                    backgroundColor: "var(--bg-card-inner)",
+                    border: "1px solid var(--border-color)",
+                    borderRadius: "8px",
+                    padding: "12px 16px 12px 40px",
+                    color: "var(--text-primary)",
+                    fontSize: "15px",
+                    outline: "none",
+                    boxSizing: "border-box",
+                    cursor: "pointer",
+                  }}
+                />
+              </div>
             </div>
 
             {/* Submit / Cancel Buttons */}
@@ -674,22 +722,26 @@ function TransactionsView({ email, user_id }) {
                 onMouseLeave={() => setIsBtnHovered(false)}
                 style={{
                   width: "100%",
-                  backgroundColor: isBtnHovered ? "#00e5ff" : "#00b6d3",
+                  backgroundColor: isBtnHovered ? "#00e5ff" : "#00d8f6",
                   color: "#080B11",
                   border: "none",
                   borderRadius: "8px",
-                  padding: "14px",
-                  fontSize: "15px",
-                  fontWeight: "bold",
-                  cursor: "pointer",
-                  transition: "all 0.2s ease-in-out",
+                  padding: "12px",
+                  fontSize: "16px",
+                  fontWeight: "700",
+                  cursor: viewTrash ? "not-allowed" : "pointer",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   gap: "8px",
+                  transition: "background-color 0.2s ease-in-out",
                 }}
               >
-                {editingId ? "Save Expense" : <><span style={{ fontSize: "16px", fontWeight: "bold" }}>+</span> Add Expense</>}
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                {editingId ? "Update" : "Add Expense"}
               </button>
 
               {editingId && (
@@ -818,160 +870,89 @@ function TransactionsView({ email, user_id }) {
             </div>
           </div>
 
-          <div style={{ overflowY: "auto", maxHeight: "480px" }}>
-          <div style={{ overflowY: "auto", maxHeight: "480px", display: "flex", flexDirection: "column", gap: "12px", paddingRight: "4px" }}>
-            {displayedTransactions.length === 0 ? (
-              <div style={{ padding: "32px 16px", textAlign: "center", color: "var(--text-secondary)", fontSize: "14px", border: "1px dashed var(--border-color)", borderRadius: "12px" }}>
-                {viewTrash ? "Trash bin is empty." : "No transactions logged yet."}
+          <div style={{ overflowX: "auto" }}>
+            <div style={{ minWidth: "600px", display: "flex", flexDirection: "column" }}>
+              {/* Table Header */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 80px", padding: "16px 24px", borderBottom: "1px solid var(--border-color)", color: "var(--text-secondary)", fontSize: "12px", fontWeight: "600", letterSpacing: "0.5px" }}>
+                <span>DATE</span>
+                <span>CATEGORY</span>
+                <span>AMOUNT</span>
+                <span style={{ textAlign: "right" }}>ACTION</span>
               </div>
-            ) : (
-              displayedTransactions.map((tx) => {
-                const styleData = getCategoryStyles(tx.category);
-                const isEditingThis = editingId === tx.id;
-                
-                return (
-                  <div key={tx.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px", backgroundColor: isEditingThis ? "rgba(0, 216, 246, 0.08)" : "var(--bg-card-inner)", border: "1px solid var(--border-color)", borderRadius: "12px", opacity: viewTrash && !tx.deleted_at ? 0.5 : 1 }}>
-                    
-                    {/* Left Side: Date and Category Badge */}
-                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                      <span style={{ fontSize: "13px", color: "var(--text-secondary)" }}>
-                        {tx.date ? new Date(tx.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
-                      </span>
-                      <span
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "6px",
-                          backgroundColor: styleData.bg,
-                          color: styleData.color,
-                          padding: "4px 10px",
-                          borderRadius: "12px",
-                          fontSize: "12px",
-                          fontWeight: "bold",
-                          width: "fit-content"
-                        }}
-                      >
-                        <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: styleData.dot }}></span>
-                        {tx.category}
-                      </span>
-                    </div>
 
-                    {/* Right Side: Amount and Actions */}
-                    <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-                      <span style={{ fontSize: "16px", fontWeight: "700", color: "var(--text-primary)" }}>
-                        ₱{tx.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </span>
-                      
-                      {/* Action Buttons */}
-                      <div style={{ display: "flex", gap: "4px" }}>
+              <div style={{ overflowY: "auto", maxHeight: "480px", display: "flex", flexDirection: "column" }}>
+                {displayedTransactions.length === 0 ? (
+                  <div style={{ padding: "32px 16px", textAlign: "center", color: "var(--text-secondary)", fontSize: "14px" }}>
+                    {viewTrash ? "Trash bin is empty." : "No transactions logged yet."}
+                  </div>
+                ) : (
+                  displayedTransactions.map((tx, index) => {
+                    const styleData = getCategoryStyles(tx.category);
+                    const isEditingThis = editingId === tx.id;
+                    const rowBg = index % 2 === 0 ? "transparent" : "rgba(255, 255, 255, 0.02)";
+                    
+                    return (
+                      <div key={tx.id} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 80px", alignItems: "center", padding: "16px 24px", borderBottom: "1px solid var(--border-color)", backgroundColor: isEditingThis ? "rgba(0, 216, 246, 0.08)" : rowBg, opacity: viewTrash && !tx.deleted_at ? 0.5 : 1, transition: "background-color 0.2s" }} onMouseEnter={(e) => {if(!isEditingThis) e.currentTarget.style.backgroundColor = "var(--bg-card-inner)"}} onMouseLeave={(e) => {if(!isEditingThis) e.currentTarget.style.backgroundColor = rowBg}}>
+                        
+                        {/* Date */}
+                        <span style={{ fontSize: "14px", color: "var(--text-secondary)" }}>
+                          {tx.date ? new Date(tx.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
+                        </span>
+                        
+                        {/* Category Badge */}
+                        <div style={{ display: "flex", alignItems: "center" }}>
+                          <span
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "6px",
+                              backgroundColor: styleData.bg,
+                              color: styleData.color,
+                              padding: "4px 10px",
+                              borderRadius: "12px",
+                              fontSize: "12px",
+                              fontWeight: "bold"
+                            }}
+                          >
+                            <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: styleData.dot }}></span>
+                            {tx.category}
+                          </span>
+                        </div>
+
+                        {/* Amount */}
+                        <span style={{ fontSize: "15px", fontWeight: "600", color: "var(--text-primary)" }}>
+                          ₱{tx.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                        
+                        {/* Action Buttons */}
+                        <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", opacity: isEditingThis ? 1 : 0.6, transition: "opacity 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.opacity = 1} onMouseLeave={(e) => e.currentTarget.style.opacity = isEditingThis ? 1 : 0.6}>
                         {viewTrash ? (
                           <>
                             {/* Restore Button */}
-                            <button
-                              onClick={() => handleRestoreClick(tx.id)}
-                              title="Restore"
-                              style={{
-                                backgroundColor: "transparent",
-                                border: "none",
-                                cursor: "pointer",
-                                color: "var(--text-secondary)",
-                                transition: "color 0.2s ease",
-                                display: "inline-flex",
-                                alignItems: "center",
-                                padding: "4px",
-                              }}
-                              onMouseEnter={(e) => e.currentTarget.style.color = "#00d8f6"}
-                              onMouseLeave={(e) => e.currentTarget.style.color = "var(--text-secondary)"}
-                            >
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M2.5 2v6h6M21.5 22v-6h-6" />
-                                <path d="M22 11.5A10 10 0 0 0 9.5 2.5M2 12.5a10 10 0 0 0 12.5 9" />
-                              </svg>
+                            <button onClick={() => handleRestoreClick(tx.id)} title="Restore" style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-secondary)" }} onMouseEnter={(e) => e.currentTarget.style.color = "#00d8f6"} onMouseLeave={(e) => e.currentTarget.style.color = "var(--text-secondary)"}>
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2.5 2v6h6M21.5 22v-6h-6"/><path d="M22 11.5A10 10 0 0 0 9.5 2.5M2 12.5a10 10 0 0 0 12.5 9"/></svg>
                             </button>
-                            
-                            {/* Purge Button */}
-                            <button
-                              onClick={() => handlePurgeClick(tx.id)}
-                              title="Delete Permanently"
-                              style={{
-                                backgroundColor: "transparent",
-                                border: "none",
-                                cursor: "pointer",
-                                color: "var(--text-secondary)",
-                                transition: "color 0.2s ease",
-                                display: "inline-flex",
-                                alignItems: "center",
-                                padding: "4px",
-                              }}
-                              onMouseEnter={(e) => e.currentTarget.style.color = "#FF5252"}
-                              onMouseLeave={(e) => e.currentTarget.style.color = "var(--text-secondary)"}
-                            >
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                <polyline points="3 6 5 6 21 6" />
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                                <line x1="10" y1="11" x2="10" y2="17" />
-                                <line x1="14" y1="11" x2="14" y2="17" />
-                              </svg>
+                            <button onClick={() => handlePurgeClick(tx.id)} title="Delete Permanently" style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-secondary)" }} onMouseEnter={(e) => e.currentTarget.style.color = "#FF5252"} onMouseLeave={(e) => e.currentTarget.style.color = "var(--text-secondary)"}>
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
                             </button>
                           </>
                         ) : (
                           <>
-                            {/* Edit Button */}
-                            <button
-                              onClick={() => handleEditClick(tx)}
-                              title="Edit Expense"
-                              style={{
-                                backgroundColor: "transparent",
-                                border: "none",
-                                cursor: "pointer",
-                                color: isEditingThis ? "#00d8f6" : "var(--text-secondary)",
-                                transition: "color 0.2s ease-in-out",
-                                display: "inline-flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                padding: "4px",
-                              }}
-                              onMouseEnter={(e) => e.currentTarget.style.color = "#00d8f6"}
-                              onMouseLeave={(e) => e.currentTarget.style.color = isEditingThis ? "#00d8f6" : "var(--text-secondary)"}
-                            >
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                              </svg>
+                            <button onClick={() => handleEditClick(tx)} title="Edit Expense" style={{ background: "none", border: "none", cursor: "pointer", color: isEditingThis ? "#00d8f6" : "var(--text-secondary)" }} onMouseEnter={(e) => e.currentTarget.style.color = "#00d8f6"} onMouseLeave={(e) => e.currentTarget.style.color = isEditingThis ? "#00d8f6" : "var(--text-secondary)"}>
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                             </button>
-
-                            {/* Soft Delete Button */}
-                            <button
-                              onClick={() => handleDeleteClick(tx.id)}
-                              title="Move to Trash"
-                              style={{
-                                backgroundColor: "transparent",
-                                border: "none",
-                                cursor: "pointer",
-                                color: "var(--text-secondary)",
-                                transition: "color 0.2s ease-in-out",
-                                display: "inline-flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                padding: "4px",
-                              }}
-                              onMouseEnter={(e) => e.currentTarget.style.color = "#FF5252"}
-                              onMouseLeave={(e) => e.currentTarget.style.color = "var(--text-secondary)"}
-                            >
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <polyline points="3 6 5 6 21 6" />
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                              </svg>
+                            <button onClick={() => handleDeleteClick(tx.id)} title="Move to Trash" style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-secondary)" }} onMouseEnter={(e) => e.currentTarget.style.color = "#FF5252"} onMouseLeave={(e) => e.currentTarget.style.color = "var(--text-secondary)"}>
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                             </button>
                           </>
                         )}
                       </div>
                     </div>
-                  </div>
-                );
-              })
+                  );
+                })
             )}
-          </div>
+              </div>
+            </div>
           </div>
 
           {/* Pagination Controls */}

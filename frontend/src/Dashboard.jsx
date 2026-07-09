@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import DashboardView from "./DashboardView";
 import TransactionsView from "./TransactionsView";
+import AIAssistantView from "./AIAssistantView";
+import WalletView from "./WalletView";
 import PasswordView from "./PasswordView";
 
 function Dashboard({
@@ -321,8 +323,8 @@ function Dashboard({
             </button>
 
             <button
-              onClick={() => setActiveTab("password")}
-              title={isCollapsed ? "Password Settings" : undefined}
+              onClick={() => setActiveTab("assistant")}
+              title={isCollapsed ? "AI Assistant" : undefined}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -330,10 +332,10 @@ function Dashboard({
                 gap: isCollapsed ? "0" : "14px",
                 padding: "12px 16px",
                 backgroundColor:
-                  activeTab === "password"
+                  activeTab === "assistant"
                     ? "rgba(0, 216, 246, 0.08)"
                     : "transparent",
-                color: activeTab === "password" ? "#00d8f6" : "#718096",
+                color: activeTab === "assistant" ? "#00d8f6" : "#718096",
                 border: "none",
                 borderRadius: "10px",
                 fontSize: "15px",
@@ -344,20 +346,43 @@ function Dashboard({
                 width: "100%",
               }}
             >
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+                <path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/>
               </svg>
-              {!isCollapsed && "Password"}
+              {!isCollapsed && "AI Assistant"}
+            </button>
+
+            <button
+              onClick={() => setActiveTab("wallet")}
+              title={isCollapsed ? "Wallet" : undefined}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: isCollapsed ? "center" : "flex-start",
+                gap: isCollapsed ? "0" : "14px",
+                padding: "12px 16px",
+                backgroundColor:
+                  activeTab === "wallet"
+                    ? "rgba(0, 216, 246, 0.08)"
+                    : "transparent",
+                color: activeTab === "wallet" ? "#00d8f6" : "#718096",
+                border: "none",
+                borderRadius: "10px",
+                fontSize: "15px",
+                fontWeight: "600",
+                cursor: "pointer",
+                textAlign: "left",
+                transition: "all 0.2s ease-in-out",
+                width: "100%",
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"></path>
+                <path d="M4 6v12c0 1.1.9 2 2 2h14v-4"></path>
+                <path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z"></path>
+              </svg>
+              {!isCollapsed && "Wallet"}
             </button>
           </div>
         </div>
@@ -679,15 +704,12 @@ function Dashboard({
           <div style={{ padding: isMobile ? "24px 20px" : "50px 60px" }}>
             {activeTab === "dashboard" ? (
               <DashboardView email={email} user_id={userId} />
-            ) : activeTab === "password" ? (
-              <PasswordView
-                email={email}
-                onLogout={onLogout}
-                hasPassword={hasPassword}
-                onPasswordSet={onPasswordSet}
-              />
+            ) : activeTab === "wallet" ? (
+              <WalletView />
             ) : activeTab === "transactions" ? (
               <TransactionsView email={email} user_id={userId} />
+            ) : activeTab === "assistant" ? (
+              <AIAssistantView />
             ) : null}
           </div>
         </div>
