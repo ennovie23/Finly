@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-
 function DashboardView({ email, user_id }) {
   const monthsShort = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   
@@ -13,6 +12,7 @@ function DashboardView({ email, user_id }) {
   const [analyticsData, setAnalyticsData] = useState({ total_spend: 0 });
   const [loading, setLoading] = useState(false);
   const [availableYears, setAvailableYears] = useState(["2026"]);
+  const [walletBalance, setWalletBalance] = useState(0);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -59,6 +59,24 @@ function DashboardView({ email, user_id }) {
       setLoading(false);
     }
   };
+
+  const fetchWalletBalance = async () => {
+    try {
+      // Sum all linked accounts to get total balance
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/banks/accounts`);
+      if (response.ok) {
+        const accounts = await response.json();
+        const total = accounts.reduce((sum, acc) => sum + parseFloat(acc.balance), 0);
+        setWalletBalance(total);
+      }
+    } catch (err) {
+      console.error("Failed to fetch wallet balance:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchWalletBalance();
+  }, []);
 
   const fetchExpenses = async () => {
     if (!user_id) return;
@@ -144,10 +162,7 @@ function DashboardView({ email, user_id }) {
   })();
 
   const formatCurrencySimple = (val) => {
-    if (val >= 1000) {
-      return `₱${(val / 1000).toFixed(1)}k`;
-    }
-    return `₱${val}`;
+    return `₱${Number(val).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
   };
 
   // Determine if we should show Daily or Monthly trends
@@ -285,6 +300,31 @@ function DashboardView({ email, user_id }) {
 
       {/* Top Metric Cards Grid */}
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fit, minmax(220px, 1fr))", gap: "24px", marginBottom: "32px" }}>
+        
+        {/* Wallet Balance Card */}
+        <div style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: "16px", padding: "28px 24px", position: "relative", textAlign: "left", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00E676" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="5" width="20" height="14" rx="2" />
+                  <line x1="2" y1="10" x2="22" y2="10" />
+                </svg>
+                <span style={{ color: "var(--text-secondary)", fontSize: "15px", fontWeight: "600" }}>Wallet Balance</span>
+              </div>
+            </div>
+            <div style={{ fontSize: "36px", fontWeight: "800", color: "var(--text-primary)" }}>
+              {formatCurrencySimple(parseFloat(walletBalance))}
+            </div>
+          </div>
+
+          <div style={{ position: "absolute", right: "24px", bottom: "24px", opacity: 0.15 }}>
+            <svg width="60" height="40" viewBox="0 0 60 40" fill="none" stroke="#00E676" strokeWidth="2.5">
+              <rect x="4" y="8" width="52" height="24" rx="4" />
+              <circle cx="44" cy="20" r="4" />
+            </svg>
+          </div>
+        </div>
         
         {/* Total Monthly Spend Card (Dynamic from Python analytics) */}
         <div style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: "16px", padding: "28px 24px", position: "relative", textAlign: "left" }}>
@@ -580,7 +620,9 @@ function DashboardView({ email, user_id }) {
           </div>
         </div>
       )}
+
     </div>
   );
 }
+
 export default DashboardView;
