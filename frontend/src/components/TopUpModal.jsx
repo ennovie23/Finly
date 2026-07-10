@@ -53,19 +53,21 @@ export default function TopUpModal({ isOpen, onClose, onTopUpSuccess }) {
       top: 0, left: 0, right: 0, bottom: 0,
       backgroundColor: 'rgba(0,0,0,0.7)',
       display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
       zIndex: 3000,
-      backdropFilter: 'blur(5px)'
+      backdropFilter: 'blur(5px)',
+      padding: '24px',
+      boxSizing: 'border-box',
+      overflowY: 'auto'
+      zIndex: 3000,
     }}>
       <div style={{
         backgroundColor: 'var(--bg-card)',
         padding: '32px',
         borderRadius: '16px',
-        width: '90%',
+        width: '100%',
         maxWidth: '400px',
-        boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
-        position: 'relative'
+        position: 'relative',
+        margin: 'auto'
       }}>
         <button 
           onClick={onClose}

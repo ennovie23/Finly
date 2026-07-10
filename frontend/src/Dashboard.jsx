@@ -870,7 +870,7 @@ function Dashboard({
             transition: "background-color 0.3s ease",
           }}
         >
-          <div style={{ padding: isMobile && (activeTab === "assistant" || activeTab === "photos") ? "0" : isMobile ? "24px 20px 80px 20px" : "50px 60px 100px 60px", minHeight: "100%", boxSizing: "border-box" }}>
+          <div style={{ padding: isMobile && (activeTab === "assistant" || activeTab === "photos") ? "0" : isMobile ? "24px 20px 0 20px" : "50px 60px 0 60px", minHeight: "100%", boxSizing: "border-box", display: "flex", flexDirection: "column" }}>
             {activeTab === "dashboard" ? (
               <DashboardView email={email} user_id={userId} />
             ) : activeTab === "wallet" ? (
@@ -930,6 +930,7 @@ function Dashboard({
                </div>
               </div>
             ) : null}
+            <div style={{ height: isMobile && (activeTab === "assistant" || activeTab === "photos") ? "0px" : isMobile ? "80px" : "100px", flexShrink: 0, width: "100%" }} />
           </div>
         </div>
       </div>

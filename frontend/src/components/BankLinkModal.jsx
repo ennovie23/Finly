@@ -86,9 +86,10 @@ export default function BankLinkModal({ isOpen, onClose, onLinkSuccess }) {
       backgroundColor: 'rgba(0,0,0,0.7)',
       backdropFilter: 'blur(4px)',
       display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 1000
+      zIndex: 1000,
+      padding: '24px',
+      boxSizing: 'border-box',
+      overflowY: 'auto'
     }}>
       <div style={{
         backgroundColor: 'var(--bg-card)',
@@ -96,17 +97,20 @@ export default function BankLinkModal({ isOpen, onClose, onLinkSuccess }) {
         borderRadius: '16px',
         width: '100%',
         maxWidth: '500px',
-        padding: '32px',
-        position: 'relative'
+        maxHeight: '80vh',
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'relative',
+        margin: 'auto'
       }}>
         <button onClick={handleClose} style={{
           position: 'absolute', top: '24px', right: '24px',
-          background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '24px'
+          background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '24px', zIndex: 10
         }}>✕</button>
 
         {step === 1 && (
           <>
-            <div style={{ marginBottom: '24px' }}>
+            <div style={{ padding: '32px 32px 16px 32px', flexShrink: 0 }}>
               <h2 style={{ margin: '0 0 8px 0', color: 'var(--text-primary)', fontSize: '24px' }}>Select Bank</h2>
               <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '14px' }}>Connect securely via Open Banking</p>
             </div>
@@ -114,7 +118,9 @@ export default function BankLinkModal({ isOpen, onClose, onLinkSuccess }) {
             <div style={{
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
-              gap: '16px'
+              gap: '16px',
+              padding: '0 32px 32px 32px',
+              overflowY: 'auto'
             }}>
               {banksList.map(bank => (
                 <div 
@@ -160,25 +166,17 @@ export default function BankLinkModal({ isOpen, onClose, onLinkSuccess }) {
         )}
 
         {step === 2 && selectedBank && (
-          <div style={{ padding: '16px 0' }}>
-             <button 
-                onClick={() => setStep(1)} 
-                style={{ background: 'none', border: 'none', color: '#00d8f6', cursor: 'pointer', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '4px' }}
-              >
-                ← Back
-              </button>
-
-             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
-              <div style={{
-                    width: '64px', height: '64px', borderRadius: '50%', backgroundColor: selectedBank.color,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px',
+          <div style={{ padding: '32px', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+              <button onClick={() => setStep(1)} style={{
+                background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', padding: 0
               }}>
-                {selectedBank.logo}
-              </div>
-              <div>
-                <h3 style={{ margin: '0 0 4px 0', color: 'var(--text-primary)' }}>Link {selectedBank.name}</h3>
-                <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '14px' }}>Enter your current account balance.</p>
-              </div>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
+              </button>
+              <h2 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '20px' }}>{selectedBank.name}</h2>
             </div>
 
             <form onSubmit={handleLinkBank} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -208,45 +206,30 @@ export default function BankLinkModal({ isOpen, onClose, onLinkSuccess }) {
 
               {error && <div style={{ color: '#FF5252', fontSize: '14px' }}>{error}</div>}
 
-              <button
+              <button 
                 type="submit"
-                disabled={!amount}
                 style={{
-                  padding: '16px',
-                  backgroundColor: selectedBank.color,
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '16px',
-                  fontWeight: 'bold',
-                  cursor: !amount ? 'not-allowed' : 'pointer',
-                  opacity: !amount ? 0.7 : 1,
-                  marginTop: '8px'
+                  width: '100%', padding: '16px', backgroundColor: '#00d8f6', color: '#080B11',
+                  border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer'
                 }}
               >
-                Securely Connect Account
+                Connect Account
               </button>
             </form>
           </div>
         )}
 
         {step === 3 && (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '40px 20px', textAlign: 'center' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '48px 32px' }}>
             <div style={{
-              width: '80px', height: '80px', borderRadius: '50%', backgroundColor: selectedBank.color,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '40px',
-              marginBottom: '24px', animation: 'pulse 1.5s infinite'
-            }}>
-              {selectedBank.logo}
-            </div>
-            <h3 style={{ margin: '0 0 16px 0', color: 'var(--text-primary)' }}>Connecting Account...</h3>
-            <p style={{ color: 'var(--text-secondary)' }}>Please wait while we establish a secure connection.</p>
+              width: '64px', height: '64px', borderRadius: '50%', border: '4px solid rgba(0, 216, 246, 0.2)',
+              borderTopColor: '#00d8f6', animation: 'spin 1s linear infinite', marginBottom: '24px'
+            }} />
+            <h3 style={{ color: 'var(--text-primary)', margin: '0 0 8px 0' }}>Connecting to {selectedBank?.name}...</h3>
+            <p style={{ color: 'var(--text-secondary)', margin: 0 }}>Securing your connection</p>
             
             <style>
               {`
-                @keyframes pulse {
-                  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255,255,255, 0.2); }
-                  70% { transform: scale(1.05); box-shadow: 0 0 0 20px rgba(255,255,255, 0); }
                   100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255,255,255, 0); }
                 }
               `}

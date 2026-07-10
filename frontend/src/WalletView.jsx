@@ -240,16 +240,10 @@ const AccountCard = ({ isMobile, name, type, amount, color, icon }) => (
         <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
           <span style={{ color: "var(--text-secondary)", fontSize: "13px", fontWeight: "500", whiteSpace: "nowrap" }}>{type}</span>
           {name !== 'Cash on Hand' && (
-            <span style={{
-              backgroundColor: "rgba(255,255,255,0.05)",
-              padding: "3px 8px",
-              borderRadius: "6px",
-              fontSize: "10px",
-              color: "var(--text-secondary)",
-              fontWeight: "700",
-              letterSpacing: "0.5px",
-              whiteSpace: "nowrap"
-            }}>LIVE SYNC</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#00C853', fontSize: '11px', fontWeight: '600' }} title="Securely connected via Open Banking">
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#00C853' }}></span>
+              Linked
+            </div>
           )}
         </div>
       </div>
