@@ -5,8 +5,15 @@ const WalletView = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [linkedAccounts, setLinkedAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const fetchAccounts = async () => {
     try {
@@ -69,21 +76,21 @@ const WalletView = () => {
         backgroundColor: "var(--bg-card)",
         border: "1px solid var(--border-color)",
         borderRadius: "16px",
-        padding: "32px 40px",
+        padding: isMobile ? "24px 20px" : "32px 40px",
         position: "relative",
         overflow: "hidden"
       }}>
         {/* Faint wallet background icon */}
         <div style={{
           position: "absolute",
-          right: "20px",
+          right: isMobile ? "-20px" : "20px",
           top: "50%",
           transform: "translateY(-50%)",
           opacity: 0.05,
           color: "currentColor",
           pointerEvents: "none"
         }}>
-          <svg width="280" height="280" viewBox="0 0 24 24" fill="currentColor">
+          <svg width={isMobile ? "180" : "280"} height={isMobile ? "180" : "280"} viewBox="0 0 24 24" fill="currentColor">
             <path d="M19 5H5c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-2 9h-2c-.55 0-1-.45-1-1s.45-1 1-1h2v2z"/>
           </svg>
         </div>
@@ -96,7 +103,7 @@ const WalletView = () => {
               <path d="m9 12 2 2 4-4"/>
             </svg>
           </div>
-          <h2 style={{ fontSize: "56px", fontWeight: "800", margin: "0 0 24px 0", letterSpacing: "-1.5px", color: "var(--text-primary)" }}>
+          <h2 style={{ fontSize: isMobile ? "40px" : "56px", fontWeight: "800", margin: "0 0 24px 0", letterSpacing: "-1.5px", color: "var(--text-primary)" }}>
             {loading ? '...' : formatCurrency(liveNetWorth)}
           </h2>
           
@@ -146,13 +153,14 @@ const WalletView = () => {
       {/* Grid */}
       <div style={{ 
         display: "grid", 
-        gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))", 
+        gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", 
         gap: "24px" 
       }}>
 
         {linkedAccounts.map(acc => (
           <AccountCard 
             key={acc.id}
+            isMobile={isMobile}
             name={acc.bank_name} 
             type={acc.account_type} 
             amount={formatCurrency(acc.balance)} 
@@ -188,12 +196,12 @@ const WalletView = () => {
   );
 };
 
-const AccountCard = ({ name, type, amount, color, icon }) => (
+const AccountCard = ({ isMobile, name, type, amount, color, icon }) => (
   <div style={{
     backgroundColor: "var(--bg-card)",
     border: "1px solid var(--border-color)",
     borderRadius: "16px",
-    padding: "24px",
+    padding: isMobile ? "16px 20px" : "24px",
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
@@ -208,30 +216,30 @@ const AccountCard = ({ name, type, amount, color, icon }) => (
   }}>
     <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
       <div style={{
-        width: "56px",
-        height: "56px",
+        width: isMobile ? "48px" : "56px",
+        height: isMobile ? "48px" : "56px",
         borderRadius: "14px",
         backgroundColor: color,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        color: name === 'SpendSight Wallet' ? '#000' : 'white'
+        color: name === 'Cash on Hand' ? '#000' : 'white'
       }}>
         {icon}
       </div>
       <div>
         <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
-          <span style={{ fontWeight: "600", fontSize: "16px", color: "var(--text-primary)" }}>{name}</span>
-          {name !== 'SpendSight Wallet' && (
+          <span style={{ fontWeight: "600", fontSize: isMobile ? "15px" : "16px", color: "var(--text-primary)" }}>{name}</span>
+          {name !== 'Cash on Hand' && (
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
               <path d="M7 11V7a5 5 0 0 1 10 0v4" />
             </svg>
           )}
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <span style={{ color: "var(--text-secondary)", fontSize: "13px", fontWeight: "500" }}>{type}</span>
-          {name !== 'SpendSight Wallet' && (
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+          <span style={{ color: "var(--text-secondary)", fontSize: "13px", fontWeight: "500", whiteSpace: "nowrap" }}>{type}</span>
+          {name !== 'Cash on Hand' && (
             <span style={{
               backgroundColor: "rgba(255,255,255,0.05)",
               padding: "3px 8px",
@@ -239,13 +247,14 @@ const AccountCard = ({ name, type, amount, color, icon }) => (
               fontSize: "10px",
               color: "var(--text-secondary)",
               fontWeight: "700",
-              letterSpacing: "0.5px"
+              letterSpacing: "0.5px",
+              whiteSpace: "nowrap"
             }}>LIVE SYNC</span>
           )}
         </div>
       </div>
     </div>
-    <div style={{ fontSize: "18px", fontWeight: "700", color: "var(--text-primary)" }}>{amount}</div>
+    <div style={{ fontSize: isMobile ? "16px" : "18px", fontWeight: "700", color: "var(--text-primary)" }}>{amount}</div>
   </div>
 );
 
