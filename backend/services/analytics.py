@@ -28,6 +28,11 @@ def main():
     # 2. Data Cleaning & Preparation
     df = pd.DataFrame(raw_transactions)
     df['date'] = pd.to_datetime(df['date'])
+    # Convert UTC timestamps from the database to the local timezone (Asia/Manila)
+    # This prevents the timezone bug where Tuesday transactions are read as Monday!
+    if df['date'].dt.tz is None:
+        df['date'] = df['date'].dt.tz_localize('UTC')
+    df['date'] = df['date'].dt.tz_convert('Asia/Manila').dt.tz_localize(None)
     df['amount'] = pd.to_numeric(df['amount'])
 
     # 3. Core Dashboard Analytics Math
